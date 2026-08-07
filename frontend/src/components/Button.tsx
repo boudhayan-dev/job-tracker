@@ -14,7 +14,7 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant }
 export default function Button({ variant = 'primary', className = '', children, ...rest }: Props) {
   return (
     <button
-      className={`font-label-md text-label-md rounded-lg px-xl py-sm min-h-[48px] flex items-center justify-center gap-sm active:scale-95 transition-all duration-150 whitespace-nowrap ${VARIANT_CLASS[variant]} ${className}`}
+      className={`font-label-md text-label-md rounded-lg px-xl py-sm min-h-[48px] flex items-center justify-center gap-sm active:scale-95 transition-all duration-150 whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100 ${VARIANT_CLASS[variant]} ${className}`}
       {...rest}
     >
       {children}

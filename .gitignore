@@ -13,6 +13,7 @@ build/
 .wrangler/
 .dev.vars
 .dev.vars.*
+worker-configuration.d.ts
 
 # Env / secrets
 .env

@@ -1,0 +1,20 @@
+# Local development config for `wrangler pages dev`.
+# Real dev/prod resource IDs get filled in at deploy time (see ARCHITECTURE.md
+# "Environments & deployment") — this file is for running everything locally first.
+
+name = "job-tracker"
+pages_build_output_dir = "frontend/dist"
+compatibility_date = "2026-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "career-recall-local"
+database_id = "00000000-0000-0000-0000-000000000000"
+
+[[r2_buckets]]
+binding = "RESUMES"
+bucket_name = "career-recall-resumes-local"
+
+[ai]
+binding = "AI"

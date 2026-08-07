@@ -1,0 +1,17 @@
+{
+  "name": "job-tracker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "db:migrate:local": "wrangler d1 execute career-recall-local --local --file=db/schema.sql",
+    "functions:dev": "wrangler pages dev --port 8788",
+    "build": "npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260804.1",
+    "@types/node": "^26.2.0",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.22.0"
+  }
+}
