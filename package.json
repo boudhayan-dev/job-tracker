@@ -5,13 +5,19 @@
   "type": "module",
   "scripts": {
     "db:migrate:local": "wrangler d1 execute career-recall-local --local --file=db/schema.sql",
+    "db:migrate:dev": "wrangler d1 execute career-recall-dev --remote --file=db/schema.sql",
+    "db:migrate:prod": "wrangler d1 execute career-recall-prod --remote --file=db/schema.sql",
     "functions:dev": "wrangler pages dev --port 8788",
-    "build": "npm run build --prefix frontend"
+    "build": "npm run build --prefix frontend",
+    "deploy:dev": "bash scripts/deploy.sh dev",
+    "deploy:prod": "bash scripts/deploy.sh prod"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20260804.1",
     "@types/node": "^26.2.0",
     "typescript": "^7.0.2",
     "wrangler": "^4.22.0"
+  },
+  "dependencies": {
+    "unpdf": "^1.8.0"
   }
 }

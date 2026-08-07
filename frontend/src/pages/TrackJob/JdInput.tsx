@@ -14,9 +14,10 @@ type Props = {
   onChange: (value: JdInputValue) => void
   onSubmit: () => void
   submitting: boolean
+  error?: string | null
 }
 
-export default function JdInput({ value, onChange, onSubmit, submitting }: Props) {
+export default function JdInput({ value, onChange, onSubmit, submitting, error: externalError }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   const canSubmit = value.source === 'url' ? value.url.trim().length > 0 : value.jdText.trim().length > 0
@@ -29,6 +30,8 @@ export default function JdInput({ value, onChange, onSubmit, submitting }: Props
     setError(null)
     onSubmit()
   }
+
+  const shownError = error ?? externalError ?? null
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -143,7 +146,7 @@ export default function JdInput({ value, onChange, onSubmit, submitting }: Props
             </div>
           )}
 
-          {error && <p className="font-body-sm text-body-sm text-error">{error}</p>}
+          {shownError && <p className="font-body-sm text-body-sm text-error">{shownError}</p>}
 
           <div className="pt-sm">
             <Button onClick={handleSubmit} disabled={submitting} className="w-full font-headline-md text-headline-md h-12">

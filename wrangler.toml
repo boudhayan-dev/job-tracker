@@ -1,6 +1,7 @@
-# Local development config for `wrangler pages dev`.
-# Real dev/prod resource IDs get filled in at deploy time (see ARCHITECTURE.md
-# "Environments & deployment") — this file is for running everything locally first.
+# Local development config for `wrangler pages dev` / `npm run functions:dev`.
+# Cloudflare Pages only ever reads ./wrangler.toml (no --config support), so the real
+# dev/prod deploy configs live in wrangler.dev.toml / wrangler.prod.toml and get swapped
+# into this path by scripts/deploy.sh at deploy time — see DEPLOYMENT.md.
 
 name = "job-tracker"
 pages_build_output_dir = "frontend/dist"
@@ -18,3 +19,12 @@ bucket_name = "career-recall-resumes-local"
 
 [ai]
 binding = "AI"
+
+[browser]
+binding = "BROWSER"
+
+# Left empty for local dev — Access middleware passes every request through when unset.
+# Real deploy environments set these (different Access app per dev/prod, see ARCHITECTURE.md).
+[vars]
+ACCESS_TEAM_DOMAIN = ""
+ACCESS_AUD = ""

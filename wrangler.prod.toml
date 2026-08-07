@@ -1,0 +1,30 @@
+# Deploy-time config for the "job-tracker-prod" Cloudflare Pages project.
+# Not used directly by wrangler (Pages CLI only reads ./wrangler.toml) — scripts/deploy.sh
+# copies this file into place before deploying. See DEPLOYMENT.md.
+#
+# REPLACE_WITH_* placeholders get filled in during first-time prod deployment, once the
+# real Cloudflare resources exist (see DEPLOYMENT.md "First-time prod deployment").
+
+name = "job-tracker-prod"
+pages_build_output_dir = "frontend/dist"
+compatibility_date = "2026-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "career-recall-prod"
+database_id = "REPLACE_WITH_PROD_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "RESUMES"
+bucket_name = "career-recall-prod-resumes"
+
+[ai]
+binding = "AI"
+
+[browser]
+binding = "BROWSER"
+
+[vars]
+ACCESS_TEAM_DOMAIN = "REPLACE_WITH_YOUR_TEAM.cloudflareaccess.com"
+ACCESS_AUD = "REPLACE_WITH_PROD_ACCESS_APPLICATION_AUD_TAG"

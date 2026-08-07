@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TopAppBar from '../components/TopAppBar'
 import BottomNav from '../components/BottomNav'
@@ -6,20 +6,31 @@ import Card from '../components/Card'
 import Button from '../components/Button'
 import Input from '../components/Input'
 import StatusChip from '../components/StatusChip'
-import { MOCK_APPLICATIONS } from '../lib/mockApplications'
+import { listApplications } from '../lib/api'
 import { formatAppliedRelative } from '../lib/format'
+import type { Application } from '../lib/types'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const [allApplications, setAllApplications] = useState<Application[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    listApplications()
+      .then(setAllApplications)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   const applications = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return MOCK_APPLICATIONS
-    return MOCK_APPLICATIONS.filter(
+    if (!q) return allApplications
+    return allApplications.filter(
       (app) => app.company.toLowerCase().includes(q) || app.roleTitle.toLowerCase().includes(q),
     )
-  }, [query])
+  }, [query, allApplications])
 
   return (
     <div className="bg-background text-on-background font-body-lg antialiased min-h-screen pb-[80px] md:pb-0">
@@ -44,8 +55,14 @@ export default function Dashboard() {
             <h2 className="font-headline-md text-headline-md text-on-surface">Active Applications</h2>
           </div>
 
-          {applications.length === 0 ? (
-            <p className="text-body-sm text-on-surface-variant">No applications match "{query}".</p>
+          {loading ? (
+            <p className="font-body-sm text-body-sm text-on-surface-variant">Loading…</p>
+          ) : error ? (
+            <p className="font-body-sm text-body-sm text-error">{error}</p>
+          ) : applications.length === 0 ? (
+            <p className="font-body-sm text-body-sm text-on-surface-variant">
+              {allApplications.length === 0 ? 'No applications tracked yet.' : `No applications match "${query}".`}
+            </p>
           ) : (
             <div className="flex flex-col gap-sm">
               {applications.map((app) => (

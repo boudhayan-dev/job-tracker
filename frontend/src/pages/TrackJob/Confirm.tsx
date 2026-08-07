@@ -8,9 +8,10 @@ type Props = {
   onBack: () => void
   onSave: () => void
   saving: boolean
+  error?: string | null
 }
 
-export default function Confirm({ jd, resume, onBack, onSave, saving }: Props) {
+export default function Confirm({ jd, resume, onBack, onSave, saving, error }: Props) {
   return (
     <div>
       <Stepper activeIndex={2} />
@@ -68,6 +69,8 @@ export default function Confirm({ jd, resume, onBack, onSave, saving }: Props) {
           </p>
         </div>
       </div>
+
+      {error && <p className="max-w-2xl mx-auto font-body-sm text-body-sm text-error mt-md">{error}</p>}
 
       <div className="max-w-2xl mx-auto flex items-center justify-between mt-lg">
         <button

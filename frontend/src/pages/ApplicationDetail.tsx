@@ -1,20 +1,66 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import TopAppBar from '../components/TopAppBar'
 import BottomNav from '../components/BottomNav'
 import StatusSelect from '../components/StatusSelect'
-import { getMockDetail } from '../lib/mockApplicationDetail'
+import { getApplication, updateApplicationStatus, type ApplicationDetailResponse } from '../lib/api'
 import type { ApplicationStatus } from '../lib/status'
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 export default function ApplicationDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [detail, setDetail] = useState(() => getMockDetail(id ?? ''))
+  const [detail, setDetail] = useState<ApplicationDetailResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showFullJd, setShowFullJd] = useState(false)
 
-  const updateStatus = (status: ApplicationStatus) => {
-    setDetail((d) => ({ ...d, status }))
-    // Placeholder — real implementation PATCHes /api/applications/:id.
+  useEffect(() => {
+    if (!id) return
+    getApplication(id)
+      .then(setDetail)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  const updateStatus = async (status: ApplicationStatus) => {
+    if (!id || !detail) return
+    const previous = detail.status
+    setDetail({ ...detail, status })
+    try {
+      await updateApplicationStatus(id, status)
+    } catch (e) {
+      setDetail((d) => (d ? { ...d, status: previous } : d))
+      setError(e instanceof Error ? e.message : 'Failed to update status')
+    }
   }
+
+  if (loading) {
+    return (
+      <div className="bg-background min-h-screen">
+        <TopAppBar showBack />
+        <p className="p-md font-body-sm text-body-sm text-on-surface-variant">Loading…</p>
+      </div>
+    )
+  }
+
+  if (error && !detail) {
+    return (
+      <div className="bg-background min-h-screen">
+        <TopAppBar showBack />
+        <p className="p-md font-body-sm text-body-sm text-error">{error}</p>
+      </div>
+    )
+  }
+
+  if (!detail) return null
+
+  const resumeBullets = detail.resume?.workExperience.flatMap((w) => w.bullets) ?? []
 
   return (
     <div className="font-body-lg text-body-lg text-on-surface antialiased bg-background min-h-screen pb-[80px] md:pb-0">
@@ -42,29 +88,35 @@ export default function ApplicationDetail() {
         <div className="md:col-span-8 flex flex-col gap-md">
           <section className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-md md:p-lg">
             <h3 className="font-headline-md text-headline-md text-on-surface mb-md">Tailored Experience</h3>
-            <div className="mb-md">
-              <h4 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase">Highlighted Skills</h4>
-              <div className="flex flex-wrap gap-xs">
-                {detail.skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="px-sm py-xs bg-surface-container-low rounded font-mono-sm text-mono-sm text-on-surface border border-surface-container-highest"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="border-t border-surface-container-highest pt-md">
-              <h4 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase">Resume Bullets Used</h4>
-              <div className="flex flex-col gap-sm">
-                {detail.resumeBullets.map((bullet, i) => (
-                  <div key={i} className="pb-sm border-b border-surface-container-highest last:border-0 last:pb-0">
-                    <p className="font-body-sm text-body-sm text-on-surface">{bullet}</p>
+            {detail.resume ? (
+              <>
+                <div className="mb-md">
+                  <h4 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase">Highlighted Skills</h4>
+                  <div className="flex flex-wrap gap-xs">
+                    {detail.resume.skills.map((skill) => (
+                      <span
+                        key={skill}
+                        className="px-sm py-xs bg-surface-container-low rounded font-mono-sm text-mono-sm text-on-surface border border-surface-container-highest"
+                      >
+                        {skill}
+                      </span>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+                <div className="border-t border-surface-container-highest pt-md">
+                  <h4 className="font-label-md text-label-md text-on-surface-variant mb-sm uppercase">Resume Bullets Used</h4>
+                  <div className="flex flex-col gap-sm">
+                    {resumeBullets.map((bullet, i) => (
+                      <div key={i} className="pb-sm border-b border-surface-container-highest last:border-0 last:pb-0">
+                        <p className="font-body-sm text-body-sm text-on-surface">{bullet}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="font-body-sm text-body-sm text-on-surface-variant">No resume uploaded for this application yet.</p>
+            )}
           </section>
 
           <section className="bg-[#EEF2FF] border border-[#C7D2FE] rounded-xl p-md md:p-lg shadow-sm">
@@ -74,14 +126,20 @@ export default function ApplicationDetail() {
               </span>
               Recall Nudges
             </h3>
-            <ul className="flex flex-col gap-sm">
-              {detail.nudges.map((nudge, i) => (
-                <li key={i} className="flex items-start gap-sm">
-                  <span className="material-symbols-outlined text-primary mt-0.5 text-sm">check_circle</span>
-                  <p className="font-body-sm text-body-sm text-on-surface font-semibold">{nudge}</p>
-                </li>
-              ))}
-            </ul>
+            {detail.nudges.length > 0 ? (
+              <ul className="flex flex-col gap-sm">
+                {detail.nudges.map((nudge, i) => (
+                  <li key={i} className="flex items-start gap-sm">
+                    <span className="material-symbols-outlined text-primary mt-0.5 text-sm">check_circle</span>
+                    <p className="font-body-sm text-body-sm text-on-surface font-semibold">{nudge}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="font-body-sm text-body-sm text-on-surface-variant">
+                Nudges generate automatically once a resume is uploaded.
+              </p>
+            )}
           </section>
         </div>
 
@@ -98,7 +156,8 @@ export default function ApplicationDetail() {
           <section className="flex flex-col gap-sm">
             <button
               onClick={() => navigate(`/applications/${id}/resume`)}
-              className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+              disabled={!detail.resume}
+              className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm disabled:opacity-50 disabled:pointer-events-none"
             >
               <div className="flex items-center gap-md">
                 <div className="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center flex-shrink-0">
@@ -106,15 +165,20 @@ export default function ApplicationDetail() {
                 </div>
                 <div>
                   <h4 className="font-headline-md text-[16px] font-semibold text-on-surface group-hover:text-primary transition-colors">
-                    {detail.resumeFileName}
+                    {detail.resume?.fileName ?? 'Original Resume'}
                   </h4>
-                  <p className="font-body-sm text-sm text-on-surface-variant">{detail.resumeFileSizeLabel}</p>
+                  <p className="font-body-sm text-sm text-on-surface-variant">
+                    {detail.resume ? `PDF • ${formatBytes(detail.resume.fileSizeBytes)}` : 'Not uploaded'}
+                  </p>
                 </div>
               </div>
               <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">open_in_new</span>
             </button>
 
-            <button className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+            <button
+              onClick={() => setShowFullJd((v) => !v)}
+              className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+            >
               <div className="flex items-center gap-md">
                 <div className="w-10 h-10 rounded-lg bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined">description</span>
@@ -123,11 +187,20 @@ export default function ApplicationDetail() {
                   <h4 className="font-headline-md text-[16px] font-semibold text-on-surface group-hover:text-primary transition-colors">
                     Full JD Text
                   </h4>
-                  <p className="font-body-sm text-sm text-on-surface-variant">View full posting</p>
+                  <p className="font-body-sm text-sm text-on-surface-variant">{showFullJd ? 'Hide' : 'View full posting'}</p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">open_in_new</span>
+              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">
+                {showFullJd ? 'expand_less' : 'open_in_new'}
+              </span>
             </button>
+            {showFullJd && (
+              <div className="bg-surface-container-lowest border border-surface-container-highest rounded-xl p-md max-h-80 overflow-y-auto">
+                <p className="font-body-sm text-body-sm text-on-surface whitespace-pre-wrap">
+                  {detail.jdFullText || 'No JD text stored.'}
+                </p>
+              </div>
+            )}
           </section>
         </div>
       </main>

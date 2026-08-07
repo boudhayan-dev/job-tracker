@@ -14,6 +14,7 @@ build/
 .dev.vars
 .dev.vars.*
 worker-configuration.d.ts
+wrangler.toml.localdev.bak
 
 # Env / secrets
 .env
