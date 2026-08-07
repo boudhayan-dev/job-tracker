@@ -1,0 +1,209 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Track New Job - CareerRecall</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-secondary-fixed-variant": "#3a485b",
+                        "primary": "#2a14b4",
+                        "surface-tint": "#5148d7",
+                        "surface-container-high": "#e6e8ea",
+                        "primary-fixed": "#e3dfff",
+                        "surface-variant": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2d3133",
+                        "tertiary-fixed": "#d8e3fb",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-dim": "#d8dadc",
+                        "outline": "#777586",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-primary-container": "#c1beff",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "on-background": "#191c1e",
+                        "secondary-fixed-dim": "#b9c7df",
+                        "outline-variant": "#c7c4d7",
+                        "on-primary-fixed-variant": "#372abf",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "secondary-container": "#d5e3fc",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#303b4e",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "secondary": "#515f74",
+                        "on-surface": "#191c1e",
+                        "primary-container": "#4338ca",
+                        "on-secondary-fixed": "#0d1c2e",
+                        "secondary-fixed": "#d5e3fc",
+                        "on-tertiary-container": "#bac5dd",
+                        "tertiary-container": "#475266",
+                        "inverse-primary": "#c3c0ff",
+                        "on-surface-variant": "#464554",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-container": "#57657a",
+                        "on-primary-fixed": "#100069",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "sm": "8px",
+                        "margin-desktop": "48px",
+                        "gutter": "16px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "base": "4px",
+                        "max-width": "1200px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "mono-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "mono-sm": ["13px", { "lineHeight": "18px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .auto-expand {
+            field-sizing: content;
+            min-height: 200px;
+        }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c7c4d7;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777586;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-body-sm antialiased">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-inverse-surface w-full sticky top-0 z-40 border-b border-outline-variant dark:border-outline">
+<div class="flex items-center justify-between px-md py-sm max-w-screen-xl mx-auto">
+<div class="flex items-center gap-sm">
+<button class="p-2 rounded-full hover:bg-surface-container-low dark:hover:bg-on-surface-variant transition-colors active:scale-95 duration-100 flex items-center justify-center text-on-surface-variant dark:text-surface-variant">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">CareerRecall</h1>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high border border-outline-variant">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A small, professional avatar placeholder showing a generic user silhouette in a minimalist corporate style. Designed for a light mode UI with soft gray and white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnl-mU_rm7RswFmE0G9cayfnqJkD6TZ9cbDrns1r10i5wbyJy1JgU2NOlAEfMN9vvrrJQM-gUz5ksfTVwiPVQ2YM85XVApADyP6zc53eSBpnRush6d-JPo_DOto9N6R0mLaiZpthY2cEIdkbxmBh_hLfTlhIE8tM9SfZSmb0lvLERNcxksvEo_Ch2bdtOpZMg93J7bdTCEKJY3nIQKW_yLmepc_ZKgTFK1jyW0lBK8vLGPuGLMs1PN">
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-lg pb-32">
+<!-- Header & Toggle -->
+<div class="mb-lg space-y-md max-w-2xl mx-auto">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface">Track New Job</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Paste the job description or details below to begin tracking.</p>
+<!-- Custom Segmented Control / Tab Switcher -->
+<div class="inline-flex bg-surface-container-low p-1 rounded-lg border border-outline-variant w-full md:w-auto mt-md">
+<button class="flex-1 md:flex-none px-xl py-sm font-label-md text-label-md rounded-md text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="link">link</span>
+                    URL Import
+                </button>
+<button class="flex-1 md:flex-none px-xl py-sm font-label-md text-label-md rounded-md bg-surface border border-outline-variant shadow-sm text-primary font-bold flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]" data-icon="content_paste">content_paste</span>
+                    Manual Paste
+                </button>
+</div>
+</div>
+<!-- Form Area (Bento-ish Grid layout for inputs) -->
+<div class="max-w-2xl mx-auto bg-surface border border-outline-variant rounded-xl shadow-sm p-md md:p-lg">
+<form class="space-y-lg">
+<!-- Company & Role Inputs -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant block" for="company">Company Name</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]" data-icon="apartment">apartment</span>
+</span>
+<input class="block w-full pl-10 pr-3 py-2 bg-surface-bright border border-outline-variant rounded-lg text-on-surface font-body-sm focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors shadow-inner" id="company" name="company" placeholder="e.g. Acme Corp" type="text">
+</div>
+</div>
+<div class="space-y-xs">
+<label class="font-label-md text-label-md text-on-surface-variant block" for="role">Role Title</label>
+<div class="relative">
+<span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-on-surface-variant">
+<span class="material-symbols-outlined text-[20px]" data-icon="work">work</span>
+</span>
+<input class="block w-full pl-10 pr-3 py-2 bg-surface-bright border border-outline-variant rounded-lg text-on-surface font-body-sm focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors shadow-inner" id="role" name="role" placeholder="e.g. Senior Designer" type="text">
+</div>
+</div>
+</div>
+<hr class="border-t border-surface-container-high my-sm">
+<!-- Job Description Textarea -->
+<div class="space-y-xs">
+<div class="flex justify-between items-end">
+<label class="font-label-md text-label-md text-on-surface-variant block" for="jd">Job Description</label>
+<button class="text-primary hover:text-primary-container font-label-md text-label-md transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="content_copy">content_copy</span> Paste from clipboard
+                        </button>
+</div>
+<textarea class="block w-full p-3 bg-surface-bright border border-outline-variant rounded-lg text-on-surface font-body-sm focus:ring-2 focus:ring-primary/10 focus:border-primary transition-colors shadow-inner resize-none auto-expand" id="jd" name="jd" placeholder="Paste the full job description here..."></textarea>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px] mt-1 text-right">Markdown supported</p>
+</div>
+<!-- Primary Action Button -->
+<div class="pt-sm">
+<button class="w-full bg-primary hover:bg-primary-container text-on-primary font-headline-md text-headline-md py-3 px-lg rounded-lg shadow-sm transition-all active:scale-95 duration-150 flex justify-center items-center gap-2 h-12" type="button">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+                        Parse JD with AI
+                    </button>
+</div>
+</form>
+</div>
+</main>
+<!-- BottomNavBar (Hidden on Desktop, Visible on Mobile if top-level destination, but per rules, this is a transactional flow (adding a job), so suppressing the nav shell to prioritize the canvas) -->
+</body></html>

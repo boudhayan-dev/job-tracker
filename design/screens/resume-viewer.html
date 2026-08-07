@@ -1,0 +1,235 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Document Viewer - CareerRecall</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts: Inter & Geist -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS Setup -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#111c2d",
+                        "on-secondary-fixed-variant": "#3a485b",
+                        "primary": "#2a14b4",
+                        "surface-tint": "#5148d7",
+                        "surface-container-high": "#e6e8ea",
+                        "primary-fixed": "#e3dfff",
+                        "surface-variant": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#2d3133",
+                        "tertiary-fixed": "#d8e3fb",
+                        "error": "#ba1a1a",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-dim": "#d8dadc",
+                        "outline": "#777586",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed-variant": "#3c475a",
+                        "on-primary-container": "#c1beff",
+                        "tertiary-fixed-dim": "#bcc7de",
+                        "on-background": "#191c1e",
+                        "secondary-fixed-dim": "#b9c7df",
+                        "outline-variant": "#c7c4d7",
+                        "on-primary-fixed-variant": "#372abf",
+                        "on-secondary": "#ffffff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "secondary-container": "#d5e3fc",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#303b4e",
+                        "on-primary": "#ffffff",
+                        "background": "#f7f9fb",
+                        "on-error": "#ffffff",
+                        "secondary": "#515f74",
+                        "on-surface": "#191c1e",
+                        "primary-container": "#4338ca",
+                        "on-secondary-fixed": "#0d1c2e",
+                        "secondary-fixed": "#d5e3fc",
+                        "on-tertiary-container": "#bac5dd",
+                        "tertiary-container": "#475266",
+                        "inverse-primary": "#c3c0ff",
+                        "on-surface-variant": "#464554",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-secondary-container": "#57657a",
+                        "on-primary-fixed": "#100069",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "sm": "8px",
+                        "margin-desktop": "48px",
+                        "gutter": "16px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "base": "4px",
+                        "max-width": "1200px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-md": ["Inter"],
+                        "mono-sm": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "mono-sm": ["13px", { "lineHeight": "18px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            /* Simulating the app background being dimmed */
+            background-color: rgba(25, 28, 30, 0.85); /* on-background heavily dimmed */
+            backdrop-filter: blur(4px);
+        }
+        
+        /* Custom scrollbar for the PDF viewer */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #777586; /* outline */
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col font-sans antialiased text-on-surface">
+<!-- Top App Bar (Task-Focused / Close Context) -->
+<!-- Suppressing main nav shell as per rules for transactional/close action screens -->
+<header class="bg-surface dark:bg-inverse-surface w-full sticky top-0 z-40 border-b border-outline-variant dark:border-outline shadow-sm">
+<div class="flex items-center justify-between px-md py-sm max-w-screen-xl mx-auto h-16">
+<!-- Leading Action: Close -->
+<button aria-label="Close document viewer" class="p-2 text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<!-- Headline / Filename -->
+<div class="flex-1 flex justify-center px-4 overflow-hidden text-center">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed truncate max-w-full">
+                    Resume_Vercel_Senior_Edge_Architect.pdf
+                </h1>
+</div>
+<!-- Trailing Action: Download -->
+<button aria-label="Download document" class="p-2 text-on-surface-variant hover:bg-surface-container-low active:scale-95 duration-100 rounded-full transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area: PDF Viewer Container -->
+<main class="flex-1 overflow-y-auto w-full p-margin-mobile md:p-margin-desktop flex justify-center items-start">
+<!-- The "PDF Page" -->
+<div class="bg-surface-container-lowest w-full max-w-3xl min-h-[1056px] shadow-lg rounded-DEFAULT p-8 md:p-12 border border-surface-variant my-4 relative">
+<!-- Simulated PDF Content (Professional Resume Style) -->
+<div class="space-y-8 text-on-surface">
+<!-- Header -->
+<div class="border-b border-surface-variant pb-6 mb-6">
+<h2 class="font-headline-lg text-headline-lg mb-2 text-on-background">Alex Mercer</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Senior Edge Architect | San Francisco, CA</p>
+<div class="flex gap-4 mt-3 font-body-sm text-body-sm text-on-surface-variant">
+<span>alex.mercer@example.com</span>
+<span>•</span>
+<span>github.com/alexmercer-edge</span>
+<span>•</span>
+<span>linkedin.com/in/alexmercer</span>
+</div>
+</div>
+<!-- Professional Summary -->
+<section>
+<h3 class="font-headline-md text-headline-md mb-3 text-primary uppercase tracking-wide">Summary</h3>
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+                        Accomplished Senior Edge Architect with over 10 years of experience designing and implementing globally distributed, low-latency compute architectures. Proven track record of spearheading serverless initiatives, optimizing edge routing protocols, and migrating monolithic applications to highly resilient edge-native frameworks. Passionate about developer experience and infrastructure as code.
+                    </p>
+</section>
+<!-- Experience -->
+<section>
+<h3 class="font-headline-md text-headline-md mb-4 text-primary uppercase tracking-wide border-b border-surface-variant pb-2">Experience</h3>
+<div class="space-y-6">
+<!-- Job 1 -->
+<div>
+<div class="flex justify-between items-baseline mb-1">
+<h4 class="font-headline-md text-[16px] font-bold">Principal Infrastructure Engineer</h4>
+<span class="font-label-md text-label-md text-on-surface-variant">2021 – Present</span>
+</div>
+<p class="font-body-sm text-body-sm italic text-on-surface-variant mb-2">TechNova Cloud Solutions, Seattle, WA</p>
+<ul class="list-disc list-outside ml-5 space-y-2 font-body-sm text-body-sm">
+<li>Architected and deployed a multi-region edge computing platform, reducing TTFB (Time to First Byte) by 45% for enterprise clients.</li>
+<li>Led a team of 8 engineers in migrating legacy microservices to a serverless edge architecture using WebAssembly and Rust.</li>
+<li>Implemented robust CI/CD pipelines incorporating automated edge deployment testing, improving deployment frequency by 3x.</li>
+</ul>
+</div>
+<!-- Job 2 -->
+<div>
+<div class="flex justify-between items-baseline mb-1">
+<h4 class="font-headline-md text-[16px] font-bold">Senior Backend Developer</h4>
+<span class="font-label-md text-label-md text-on-surface-variant">2017 – 2021</span>
+</div>
+<p class="font-body-sm text-body-sm italic text-on-surface-variant mb-2">GlobalStream Inc., San Francisco, CA</p>
+<ul class="list-disc list-outside ml-5 space-y-2 font-body-sm text-body-sm">
+<li>Designed highly available APIs handling over 50M requests daily with 99.99% uptime.</li>
+<li>Spearheaded the integration of a CDN-level caching strategy, cutting origin server costs by 30%.</li>
+<li>Mentored junior developers and established best practices for scalable Node.js application design.</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Skills -->
+<section>
+<h3 class="font-headline-md text-headline-md mb-4 text-primary uppercase tracking-wide border-b border-surface-variant pb-2">Technical Skills</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-2">Languages</h4>
+<p class="font-body-sm text-body-sm">TypeScript, Rust, Go, Python, SQL</p>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-2">Technologies</h4>
+<p class="font-body-sm text-body-sm">Edge Computing, WebAssembly, Kubernetes, Serverless, GraphQL</p>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-2">Platforms</h4>
+<p class="font-body-sm text-body-sm">Vercel, AWS, Cloudflare Workers, GCP</p>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-surface-variant mb-2">Tools</h4>
+<p class="font-body-sm text-body-sm">Terraform, Docker, Git, CI/CD Actions</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Simulated PDF Page Indicator -->
+<div class="absolute bottom-4 right-8 font-mono-sm text-mono-sm text-outline">
+                Page 1 of 1
+            </div>
+</div>
+</main>
+</body></html>

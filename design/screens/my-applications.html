@@ -1,0 +1,286 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Dashboard - CareerRecall</title>
+<!-- Google Fonts: Inter & Geist -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@500&amp;family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Design System -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "surface-variant": "#e0e3e5",
+                    "secondary": "#515f74",
+                    "surface-container-highest": "#e0e3e5",
+                    "tertiary-fixed": "#d8e3fb",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "tertiary-fixed-dim": "#bcc7de",
+                    "primary-container": "#4338ca",
+                    "on-secondary-container": "#57657a",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "outline": "#777586",
+                    "surface-container-low": "#f2f4f6",
+                    "on-surface-variant": "#464554",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#111c2d",
+                    "on-primary-fixed": "#100069",
+                    "inverse-on-surface": "#eff1f3",
+                    "secondary-container": "#d5e3fc",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#3c475a",
+                    "tertiary": "#303b4e",
+                    "surface-container": "#eceef0",
+                    "on-secondary": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-surface": "#191c1e",
+                    "on-primary-container": "#c1beff",
+                    "secondary-fixed-dim": "#b9c7df",
+                    "surface-dim": "#d8dadc",
+                    "on-background": "#191c1e",
+                    "surface-bright": "#f7f9fb",
+                    "outline-variant": "#c7c4d7",
+                    "surface-tint": "#5148d7",
+                    "secondary-fixed": "#d5e3fc",
+                    "primary": "#2a14b4",
+                    "on-tertiary-container": "#bac5dd",
+                    "on-error-container": "#93000a",
+                    "background": "#f7f9fb",
+                    "on-secondary-fixed-variant": "#3a485b",
+                    "on-primary-fixed-variant": "#372abf",
+                    "surface": "#f7f9fb",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "tertiary-container": "#475266",
+                    "on-secondary-fixed": "#0d1c2e",
+                    "inverse-primary": "#c3c0ff",
+                    "primary-fixed": "#e3dfff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "lg": "24px",
+                    "xl": "32px",
+                    "gutter": "16px",
+                    "base": "4px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "sm": "8px",
+                    "max-width": "1200px",
+                    "margin-desktop": "48px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "mono-sm": ["Geist"],
+                    "body-sm": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "body-lg": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "mono-sm": ["13px", {"lineHeight": "18px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for clean aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d8dadc;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c7c4d7;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-lg antialiased min-h-screen pb-[80px] md:pb-0">
+<!-- TopAppBar Shared Component -->
+<header class="bg-surface dark:bg-inverse-surface w-full sticky top-0 z-40 border-b border-outline-variant dark:border-outline shadow-none">
+<div class="flex items-center justify-between px-md py-sm max-w-screen-xl mx-auto">
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-on-surface-variant transition-colors active:scale-95 duration-100 p-sm rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">CareerRecall</h1>
+<div class="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant hover:bg-surface-container-low dark:hover:bg-on-surface-variant transition-colors active:scale-95 duration-100 cursor-pointer">
+<img class="w-full h-full object-cover" data-alt="A professional corporate headshot of a user smiling slightly, well-lit in a bright modern office environment, high quality, minimal distractions in the background, light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_mnrPFeuqPExZSpW1SU1_YnAwFOLCSpXAjugbvGPpATLyQC4RvH-ukudo7EjYngFZxmj0tZGJdY5-WVekT9H3kbPMz61lyydsOiV2CL-jB-3rwg2WRWSN9SnwbM8CXjR0Xdo8tKaILVbu87yncWjDfEXNcYiINqVNpZtS0qoOKrsqmbpzosiOFrbu4jcmUN2v-ng14SNCk95PafDpT42vGYOlskPJL6C2fbQiT5m87l53ITS87rx0">
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop py-lg">
+<!-- Action Row: Search & Primary Action -->
+<div class="flex flex-col md:flex-row gap-md items-stretch md:items-center justify-between mb-xl">
+<!-- Search Input -->
+<div class="relative flex-grow max-w-2xl">
+<span class="material-symbols-outlined absolute left-md top-1/2 transform -translate-y-1/2 text-on-surface-variant pointer-events-none">search</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg pl-xl pr-md py-sm text-body-sm text-on-surface placeholder-on-surface-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all shadow-sm inset-shadow-sm" placeholder="Search companies..." type="text">
+</div>
+<!-- Primary Action Button -->
+<button class="bg-primary text-on-primary font-label-md text-label-md rounded-lg px-xl py-sm flex items-center justify-center gap-sm hover:bg-primary-fixed-variant hover:shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)] active:scale-95 transition-all duration-150 h-[48px] md:h-auto whitespace-nowrap">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                Track New Job
+            </button>
+</div>
+<!-- Active Applications List -->
+<section>
+<div class="flex items-center justify-between mb-md">
+<h2 class="font-headline-md text-headline-md text-on-surface">Active Applications</h2>
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs cursor-pointer hover:text-primary transition-colors">
+                    Sorted by Date
+                    <span class="material-symbols-outlined text-[16px]">swap_vert</span>
+</span>
+</div>
+<!-- High-Density List Container -->
+<div class="flex flex-col gap-sm">
+<!-- Card 1 -->
+<div class="group bg-surface border border-outline-variant rounded-lg p-md flex items-center justify-between hover:shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)] hover:border-primary transition-all duration-200 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center flex-shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover rounded-lg" data-alt="A minimalist tech company logo featuring a blue geometric shape on a crisp white background, corporate modern design, high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuATvPA_q9OuxH_W7CV4Aom8MXHYclH0e7Kpn02VzD8ieE7lWrrNNAVit2rcjK3_8jKKhyxcXW54SXd-_MP3WbOaE9C9xLhHWueEUPCJXwWFLnvfDnSI_CluIsczadIYfJECG9pCdgwpomMLE5wXlyCQEWPMJiugVE47EDHvHha_gUHIe9MUg28jhMk4OadsBN_PHWbkLF6Iavhil138hF8JDuw21cMCAgFtfcF7MW7QlDbnMCfwkwnl">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] leading-[22px] font-bold text-on-surface group-hover:text-primary transition-colors">Acme Corp</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Senior Frontend Engineer</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-xs">
+<span class="font-label-md text-[10px] leading-[14px] px-sm py-[2px] rounded-full bg-primary-container text-on-primary-container flex items-center gap-[2px]">
+<span class="w-[6px] h-[6px] rounded-full bg-on-primary-container block"></span>
+                            Interview
+                        </span>
+<span class="font-mono-sm text-mono-sm text-on-surface-variant">Applied 2d ago</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface border border-outline-variant rounded-lg p-md flex items-center justify-between hover:shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)] hover:border-primary transition-all duration-200 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center flex-shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover rounded-lg" data-alt="A sleek corporate logo with abstract intertwined lines in dark slate grey, displayed on a clean white background, minimal and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD83R7-3vdl_kqy9YLzdh2DEsDAMXlqWEhqpOboI815NGQDFPsd-NM7dJjcftyFWYW6LR41hQBu4isBixbiSd3r-gnn9sQImGMcaLTnE1IJtNcl7kAJpmoHuCbu_KfMD6VYLgqDeC51NIJw4SgjLT_3qZ93mkQ9v38U50PENMQQMSlA8Xqu7cG2u0Zx53iSsY6WYgsxK43EF87Tfet5J9xJbmAxXptjwRNape-CiL0rGI8_ob_4khjU">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] leading-[22px] font-bold text-on-surface group-hover:text-primary transition-colors">Global Synergy</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Product Designer</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-xs">
+<span class="font-label-md text-[10px] leading-[14px] px-sm py-[2px] rounded-full bg-secondary-container text-on-secondary-container flex items-center gap-[2px]">
+<span class="w-[6px] h-[6px] rounded-full bg-on-secondary-container block"></span>
+                            Screening
+                        </span>
+<span class="font-mono-sm text-mono-sm text-on-surface-variant">Applied 4d ago</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface border border-outline-variant rounded-lg p-md flex items-center justify-between hover:shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)] hover:border-primary transition-all duration-200 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center flex-shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover rounded-lg" data-alt="A modern startup logo featuring a vibrant purple typographic mark on a clean white background, high contrast, clean vector style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt3lHhEF7FHIrH2JAFpwK00I3LSHdQonxQJv2szQJ7moWFJoqKgrVgpoxMKzfc7twhFOGvDmUsAJOP8Yf0qKQn4QkPApH5nUNQyMnTmZ4va9YW0TMUdyQ29MnKpfW_TxFmIi5F7Sq0meIKjAZ4HBgXsGEZ2pZUutp_YzXN6R3YY570abEOW3zRd9QOjJR3Z2zvtlk5WtlWTHhYVBpZu8oPaSNefTAoV7QGF3F75ZlznvTysm5mIeVe">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] leading-[22px] font-bold text-on-surface group-hover:text-primary transition-colors">Nexus Tech</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">UX Researcher</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-xs">
+<span class="font-label-md text-[10px] leading-[14px] px-sm py-[2px] rounded-full bg-surface-container-high text-on-surface flex items-center gap-[2px]">
+<span class="w-[6px] h-[6px] rounded-full bg-outline block"></span>
+                            Applied
+                        </span>
+<span class="font-mono-sm text-mono-sm text-on-surface-variant">Applied 1w ago</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group bg-surface border border-outline-variant rounded-lg p-md flex items-center justify-between hover:shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)] hover:border-primary transition-all duration-200 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center flex-shrink-0 border border-outline-variant">
+<img class="w-full h-full object-cover rounded-lg" data-alt="A financial institution logo featuring a classic serif letterform in deep navy blue on a bright white background, conveying trust and stability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9hN5ZPv29WTMjyFYNuV3_NlAviUFUqteDEJCBLEY9NIP9B-DYpsLsVf7Ack_dQcOhBU0Tg64__n33BmYGH7POoOUKyPja7TXXRHFKoFPzbQh3irPhZ5WPDJoaNcamn1CRNVGyjNpf3PVIbKx3IBFXmdCTuHm2tvMb8eefJkpbV88GmHmbddXZFSmKijWu223sQwP4l569aY4FOgdo01KEZmmoVovAE3yiRrStJS0GW7oCXzRbeRBE">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] leading-[22px] font-bold text-on-surface group-hover:text-primary transition-colors">Apex Financial</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Lead Developer</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-xs">
+<span class="font-label-md text-[10px] leading-[14px] px-sm py-[2px] rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center gap-[2px]">
+<span class="w-[6px] h-[6px] rounded-full bg-on-tertiary-fixed block"></span>
+                            Offer
+                        </span>
+<span class="font-mono-sm text-mono-sm text-on-surface-variant">Applied 2w ago</span>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group bg-surface border border-outline-variant rounded-lg p-md flex items-center justify-between hover:shadow-[0px_4px_6px_-1px_rgba(0,0,0,0.05)] hover:border-primary transition-all duration-200 cursor-pointer">
+<div class="flex items-center gap-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center flex-shrink-0 border border-outline-variant">
+<span class="font-headline-md text-headline-md font-bold text-secondary">V</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-md text-[16px] leading-[22px] font-bold text-on-surface group-hover:text-primary transition-colors">Vanguard UI</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Design Systems Engineer</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-xs">
+<span class="font-label-md text-[10px] leading-[14px] px-sm py-[2px] rounded-full bg-primary-container text-on-primary-container flex items-center gap-[2px]">
+<span class="w-[6px] h-[6px] rounded-full bg-on-primary-container block"></span>
+                            Interview
+                        </span>
+<span class="font-mono-sm text-mono-sm text-on-surface-variant">Applied 3w ago</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar Shared Component -->
+<nav class="bg-surface dark:bg-inverse-surface fixed bottom-0 w-full z-50 rounded-t-xl border-t border-outline-variant dark:border-outline shadow-sm md:hidden">
+<div class="flex justify-around items-center w-full h-16 px-gutter">
+<!-- Home (Active) -->
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary-fixed-variant text-on-primary-container dark:text-on-primary-fixed rounded-full px-lg py-xs active:scale-90 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home" data-weight="fill" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-md text-[10px] leading-[12px] mt-xs">Home</span>
+</a>
+<!-- Add (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-lg py-xs hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+<span class="font-label-md text-[10px] leading-[12px] mt-xs">Add</span>
+</a>
+<!-- Settings (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-lg py-xs hover:text-primary dark:hover:text-primary-fixed transition-colors active:scale-90 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-[10px] leading-[12px] mt-xs">Settings</span>
+</a>
+</div>
+</nav>
+</body></html>
