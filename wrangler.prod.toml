@@ -13,7 +13,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "career-recall-prod"
-database_id = "REPLACE_WITH_PROD_D1_DATABASE_ID"
+database_id = "a52b9c5a-ed80-437d-a974-7f24fd4bde8f"
 
 [[r2_buckets]]
 binding = "RESUMES"
@@ -26,5 +26,5 @@ binding = "AI"
 binding = "BROWSER"
 
 [vars]
-ACCESS_TEAM_DOMAIN = "REPLACE_WITH_YOUR_TEAM.cloudflareaccess.com"
-ACCESS_AUD = "REPLACE_WITH_PROD_ACCESS_APPLICATION_AUD_TAG"
+ACCESS_TEAM_DOMAIN = "boudhayan-dev-pages.cloudflareaccess.com"
+ACCESS_AUD = "d6e9de144ad2026d1471b30106f0022b2905492ceaa07c9e738fe0e1f9d43fa9"

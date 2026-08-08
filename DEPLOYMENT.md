@@ -213,10 +213,6 @@ environments stay fully independent. Redeploy once more afterward to sync the co
 npm run deploy:prod
 ```
 
-```bash
-npm run deploy:prod
-```
-
 ## Successive prod deployments
 
 ```bash
