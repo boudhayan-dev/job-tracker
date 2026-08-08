@@ -67,14 +67,28 @@ export function createApplication(body: CreateApplicationRequest): Promise<{ id:
   return request('/applications', { method: 'POST', body: JSON.stringify(body) })
 }
 
+export type ExtractResumeResponse = { skills: string[]; workExperience: WorkExperienceEntry[] }
+
+export function extractResume(file: File): Promise<ExtractResumeResponse> {
+  const formData = new FormData()
+  formData.append('resume', file)
+  return request('/resume/extract', { method: 'POST', body: formData })
+}
+
 export type UploadResumeResponse = {
   resume: { fileName: string; fileSizeBytes: number; skills: string[]; workExperience: WorkExperienceEntry[] }
   nudges: string[]
 }
 
-export function uploadResume(applicationId: string, file: File): Promise<UploadResumeResponse> {
+export function uploadResume(
+  applicationId: string,
+  file: File,
+  reviewed: { skills: string[]; workExperience: WorkExperienceEntry[] },
+): Promise<UploadResumeResponse> {
   const formData = new FormData()
   formData.append('resume', file)
+  formData.append('skills', JSON.stringify(reviewed.skills))
+  formData.append('workExperience', JSON.stringify(reviewed.workExperience))
   return request(`/applications/${applicationId}/resume`, { method: 'POST', body: formData })
 }
 

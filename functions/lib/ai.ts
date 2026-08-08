@@ -50,6 +50,21 @@ export async function parseJobDescription(
   }
 }
 
+// LLM JSON output can't be trusted to match the requested shape exactly (a missing `bullets`
+// on one entry has previously crashed generateNudges and any caller doing `.map`/`.flatMap` on
+// it) — normalize defensively regardless of where the entries came from (AI or client-submitted).
+export function sanitizeWorkExperience(entries: unknown): WorkExperienceEntry[] {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) => {
+    const e = (entry ?? {}) as Partial<WorkExperienceEntry>
+    return {
+      company: typeof e.company === 'string' ? e.company : '',
+      title: typeof e.title === 'string' ? e.title : '',
+      bullets: Array.isArray(e.bullets) ? e.bullets.filter((b): b is string => typeof b === 'string') : [],
+    }
+  })
+}
+
 export async function extractResumeFields(
   ai: Ai,
   resumeText: string,
@@ -65,8 +80,8 @@ Only include skills and experience that vary between resume versions — skip ed
   )
 
   return {
-    skills: Array.isArray(parsed.skills) ? parsed.skills : [],
-    workExperience: Array.isArray(parsed.workExperience) ? parsed.workExperience : [],
+    skills: Array.isArray(parsed.skills) ? parsed.skills.filter((s): s is string => typeof s === 'string') : [],
+    workExperience: sanitizeWorkExperience(parsed.workExperience),
   }
 }
 

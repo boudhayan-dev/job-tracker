@@ -28,8 +28,10 @@ type CreateBody = {
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context
   const body = (await request.json()) as CreateBody
+  const company = body.company?.trim()
+  const roleTitle = body.roleTitle?.trim()
 
-  if (!body.company || !body.roleTitle) {
+  if (!company || !roleTitle) {
     return Response.json({ error: 'company and roleTitle are required' }, { status: 400 })
   }
 
@@ -42,8 +44,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   )
     .bind(
       id,
-      body.company,
-      body.roleTitle,
+      company,
+      roleTitle,
       body.jdSummary ?? '',
       body.jdFullText ?? '',
       body.jdUrl ?? null,

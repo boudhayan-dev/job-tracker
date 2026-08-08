@@ -1,4 +1,4 @@
-import { extractResumeFields, generateNudges } from '../../../lib/ai'
+import { extractResumeFields, generateNudges, sanitizeWorkExperience } from '../../../lib/ai'
 import { getApplication, newId } from '../../../lib/db'
 import { extractPdfText } from '../../../lib/pdf'
 
@@ -11,7 +11,12 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     return Response.json({ error: 'not found' }, { status: 404 })
   }
 
-  const formData = await request.formData()
+  let formData: FormData
+  try {
+    formData = await request.formData()
+  } catch {
+    return Response.json({ error: 'expected multipart/form-data with a "resume" file field' }, { status: 400 })
+  }
   const file = formData.get('resume')
   if (!(file instanceof File)) {
     return Response.json({ error: 'resume file is required (multipart field "resume")' }, { status: 400 })
@@ -25,7 +30,23 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   await env.RESUMES.put(r2Key, bytes, { httpMetadata: { contentType: 'application/pdf' } })
 
   const rawText = await extractPdfText(bytes)
-  const { skills, workExperience } = await extractResumeFields(env.AI, rawText)
+
+  // The Track Job wizard extracts via /api/resume/extract up front and lets the user review/
+  // edit the result before saving — when those (possibly edited) fields are submitted here, we
+  // persist them as-is rather than silently re-running extraction and discarding the edits.
+  // Falls back to extracting fresh only if the client didn't send reviewed fields.
+  const skillsRaw = formData.get('skills')
+  const workExperienceRaw = formData.get('workExperience')
+  let skills: string[]
+  let workExperience: ReturnType<typeof sanitizeWorkExperience>
+  if (typeof skillsRaw === 'string' && typeof workExperienceRaw === 'string') {
+    skills = (JSON.parse(skillsRaw) as unknown[]).filter((s): s is string => typeof s === 'string')
+    workExperience = sanitizeWorkExperience(JSON.parse(workExperienceRaw))
+  } else {
+    const extracted = await extractResumeFields(env.AI, rawText)
+    skills = extracted.skills
+    workExperience = extracted.workExperience
+  }
 
   const resumeId = newId()
   const now = new Date().toISOString()

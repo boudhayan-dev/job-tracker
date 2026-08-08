@@ -13,6 +13,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   const { request, env } = context
   const body = (await request.json()) as RequestBody
 
+  if (body.source !== 'url' && body.source !== 'paste') {
+    return Response.json({ error: 'source must be "url" or "paste"' }, { status: 400 })
+  }
   if (body.source === 'url' && !body.url) {
     return Response.json({ error: 'url is required when source is "url"' }, { status: 400 })
   }

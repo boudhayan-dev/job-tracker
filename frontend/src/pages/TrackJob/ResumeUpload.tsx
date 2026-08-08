@@ -6,16 +6,25 @@ import type { ResumeDraft, WorkExperienceEntry } from '../../lib/types'
 type Props = {
   value: ResumeDraft
   onChange: (value: ResumeDraft) => void
+  onFileSelected: (file: File) => void
+  extracting: boolean
+  extractError: string | null
   onBack: () => void
   onContinue: () => void
 }
 
-export default function ResumeUpload({ value, onChange, onBack, onContinue }: Props) {
+export default function ResumeUpload({
+  value,
+  onChange,
+  onFileSelected,
+  extracting,
+  extractError,
+  onBack,
+  onContinue,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
   const [newSkill, setNewSkill] = useState('')
-
-  const setFile = (file: File | null) => onChange({ ...value, file })
 
   const addSkill = () => {
     const skill = newSkill.trim()
@@ -66,7 +75,7 @@ export default function ResumeUpload({ value, onChange, onBack, onContinue }: Pr
             e.preventDefault()
             setDragOver(false)
             const file = e.dataTransfer.files?.[0]
-            if (file) setFile(file)
+            if (file) onFileSelected(file)
           }}
           onClick={() => fileInputRef.current?.click()}
           className={`flex flex-col items-center justify-center gap-sm border-2 border-dashed rounded-lg p-xl text-center cursor-pointer transition-colors ${
@@ -90,9 +99,24 @@ export default function ResumeUpload({ value, onChange, onBack, onContinue }: Pr
             type="file"
             accept="application/pdf"
             className="hidden"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) onFileSelected(file)
+            }}
           />
         </div>
+
+        {extracting && (
+          <p className="font-body-sm text-body-sm text-on-surface-variant flex items-center gap-sm">
+            <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+            Extracting skills and experience from your resume…
+          </p>
+        )}
+        {extractError && (
+          <p className="font-body-sm text-body-sm text-error">
+            {extractError} You can still add skills/experience manually below.
+          </p>
+        )}
 
         <div className="flex flex-col gap-sm">
           <div className="flex items-center justify-between">

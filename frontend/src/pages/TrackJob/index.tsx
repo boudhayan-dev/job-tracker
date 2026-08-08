@@ -6,7 +6,7 @@ import JdReview from './JdReview'
 import ResumeUpload from './ResumeUpload'
 import Confirm from './Confirm'
 import type { ParsedJd, ResumeDraft } from '../../lib/types'
-import { crawlJd, createApplication, uploadResume } from '../../lib/api'
+import { crawlJd, createApplication, extractResume, uploadResume } from '../../lib/api'
 
 type Step = 'input' | 'jdReview' | 'resume' | 'confirm'
 
@@ -22,8 +22,14 @@ export default function TrackJob() {
   const [resume, setResume] = useState<ResumeDraft>(EMPTY_RESUME)
   const [parsing, setParsing] = useState(false)
   const [parseError, setParseError] = useState<string | null>(null)
+  const [extracting, setExtracting] = useState(false)
+  const [extractError, setExtractError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  // Remembers a successful createApplication across a retried save, so a failed resume
+  // upload (network blip, AI hiccup) doesn't insert a second application row when the
+  // user clicks Save again — only the still-failing step gets retried.
+  const [createdId, setCreatedId] = useState<string | null>(null)
 
   const handleParse = async () => {
     setParsing(true)
@@ -52,21 +58,40 @@ export default function TrackJob() {
     }
   }
 
+  const handleResumeFileSelected = async (file: File) => {
+    setResume((r) => ({ ...r, file }))
+    setExtracting(true)
+    setExtractError(null)
+    try {
+      const result = await extractResume(file)
+      setResume((r) => ({ ...r, file, skills: result.skills, workExperience: result.workExperience }))
+    } catch (e) {
+      setExtractError(e instanceof Error ? e.message : 'Failed to extract resume details.')
+    } finally {
+      setExtracting(false)
+    }
+  }
+
   const handleSave = async () => {
     if (!jd) return
     setSaving(true)
     setSaveError(null)
     try {
-      const { id } = await createApplication({
-        company: jd.company,
-        roleTitle: jd.roleTitle,
-        jdSummary: jd.summary,
-        jdFullText,
-        jdUrl: input.source === 'url' ? input.url : null,
-        requirements: jd.requirements,
-      })
+      let id = createdId
+      if (!id) {
+        const created = await createApplication({
+          company: jd.company,
+          roleTitle: jd.roleTitle,
+          jdSummary: jd.summary,
+          jdFullText,
+          jdUrl: input.source === 'url' ? input.url : null,
+          requirements: jd.requirements,
+        })
+        id = created.id
+        setCreatedId(id)
+      }
       if (resume.file) {
-        await uploadResume(id, resume.file)
+        await uploadResume(id, resume.file, { skills: resume.skills, workExperience: resume.workExperience })
       }
       navigate(`/applications/${id}`)
     } catch (e) {
@@ -95,19 +120,21 @@ export default function TrackJob() {
           <ResumeUpload
             value={resume}
             onChange={setResume}
-            onBack={() => setStep('jdReview')}
+            onFileSelected={handleResumeFileSelected}
+            extracting={extracting}
+            extractError={extractError}
+            onBack={() => {
+              // Going back this far means JD fields are editable again — if a prior save
+              // attempt already created the application, forget that id so edits here don't
+              // get silently dropped by a retry that skips createApplication.
+              setCreatedId(null)
+              setStep('jdReview')
+            }}
             onContinue={() => setStep('confirm')}
           />
         )}
         {step === 'confirm' && jd && (
-          <Confirm
-            jd={jd}
-            resume={resume}
-            onBack={() => setStep('resume')}
-            onSave={handleSave}
-            saving={saving}
-            error={saveError}
-          />
+          <Confirm jd={jd} resume={resume} onBack={() => setStep('resume')} onSave={handleSave} saving={saving} error={saveError} />
         )}
       </main>
     </div>

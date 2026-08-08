@@ -7,11 +7,13 @@ type Props = {
 }
 
 function initialsFor(name: string | null, email: string | null): string {
-  if (name) {
-    const parts = name.trim().split(/\s+/)
+  const trimmedName = name?.trim()
+  if (trimmedName) {
+    const parts = trimmedName.split(/\s+/)
     return parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase() : parts[0][0].toUpperCase()
   }
-  if (email) return email[0].toUpperCase()
+  const trimmedEmail = email?.trim()
+  if (trimmedEmail) return trimmedEmail[0].toUpperCase()
   return ''
 }
 
