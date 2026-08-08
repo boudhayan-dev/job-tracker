@@ -46,6 +46,10 @@ export function updateApplicationStatus(id: string, status: ApplicationStatus): 
   return request(`/applications/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) })
 }
 
+export function deleteApplication(id: string): Promise<{ id: string }> {
+  return request(`/applications/${id}`, { method: 'DELETE' })
+}
+
 export type CrawlJdRequest = {
   source: 'url' | 'paste'
   url?: string

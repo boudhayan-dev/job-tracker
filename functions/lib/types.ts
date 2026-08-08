@@ -25,6 +25,7 @@ export type ApplicationRow = {
   status: ApplicationStatus
   applied_date: string
   owner_email: string
+  is_deleted: number
   created_at: string
   updated_at: string
 }

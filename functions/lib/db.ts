@@ -43,10 +43,11 @@ export function toApplicationDetail(
 }
 
 // Scoped by owner_email so one trusted user can never read (or 404-probe the existence of)
-// another's application — the row simply doesn't come back if it isn't theirs.
+// another's application — the row simply doesn't come back if it isn't theirs. Soft-deleted
+// rows are excluded too, so a deleted job's detail page 404s just like it doesn't exist.
 export async function getApplication(db: D1Database, id: string, ownerEmail: string): Promise<ApplicationRow | null> {
   const row = await db
-    .prepare('SELECT * FROM applications WHERE id = ? AND owner_email = ?')
+    .prepare('SELECT * FROM applications WHERE id = ? AND owner_email = ? AND is_deleted = 0')
     .bind(id, ownerEmail)
     .first<ApplicationRow>()
   return row ?? null
@@ -63,7 +64,7 @@ export async function getResumeForApplication(
     .prepare(
       `SELECT resumes.* FROM resumes
        JOIN applications ON applications.id = resumes.application_id
-       WHERE resumes.application_id = ? AND applications.owner_email = ?`,
+       WHERE resumes.application_id = ? AND applications.owner_email = ? AND applications.is_deleted = 0`,
     )
     .bind(applicationId, ownerEmail)
     .first<ResumeRow>()
@@ -79,7 +80,7 @@ export async function getNudgesForApplication(
     .prepare(
       `SELECT nudges.* FROM nudges
        JOIN applications ON applications.id = nudges.application_id
-       WHERE nudges.application_id = ? AND applications.owner_email = ?`,
+       WHERE nudges.application_id = ? AND applications.owner_email = ? AND applications.is_deleted = 0`,
     )
     .bind(applicationId, ownerEmail)
     .first<NudgeRow>()

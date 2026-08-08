@@ -8,9 +8,11 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
 
   const query = q
     ? env.DB.prepare(
-        'SELECT * FROM applications WHERE owner_email = ?1 AND (company LIKE ?2 OR role_title LIKE ?2) ORDER BY applied_date DESC',
+        'SELECT * FROM applications WHERE owner_email = ?1 AND is_deleted = 0 AND (company LIKE ?2 OR role_title LIKE ?2) ORDER BY applied_date DESC',
       ).bind(ownerEmail, `%${q}%`)
-    : env.DB.prepare('SELECT * FROM applications WHERE owner_email = ?1 ORDER BY applied_date DESC').bind(ownerEmail)
+    : env.DB.prepare('SELECT * FROM applications WHERE owner_email = ?1 AND is_deleted = 0 ORDER BY applied_date DESC').bind(
+        ownerEmail,
+      )
 
   const { results } = await query.all<ApplicationRow>()
   return Response.json(results.map(toApplicationSummary))

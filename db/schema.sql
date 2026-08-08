@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS applications (
     CHECK (status IN ('applied', 'in_progress', 'interviewing', 'offer', 'rejected')),
   applied_date TEXT NOT NULL,
   owner_email TEXT NOT NULL DEFAULT '',
+  is_deleted INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS applications (
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
 CREATE INDEX IF NOT EXISTS idx_applications_company ON applications(company);
 CREATE INDEX IF NOT EXISTS idx_applications_owner_email ON applications(owner_email);
+CREATE INDEX IF NOT EXISTS idx_applications_is_deleted ON applications(is_deleted);
 
 CREATE TABLE IF NOT EXISTS resumes (
   id TEXT PRIMARY KEY,

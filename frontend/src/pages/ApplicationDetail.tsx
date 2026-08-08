@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import TopAppBar from '../components/TopAppBar'
 import BottomNav from '../components/BottomNav'
 import StatusSelect from '../components/StatusSelect'
-import { getApplication, resumeFileUrl, updateApplicationStatus, type ApplicationDetailResponse } from '../lib/api'
+import {
+  deleteApplication,
+  getApplication,
+  resumeFileUrl,
+  updateApplicationStatus,
+  type ApplicationDetailResponse,
+} from '../lib/api'
 import type { ApplicationStatus } from '../lib/status'
 
 function formatBytes(bytes: number): string {
@@ -14,10 +20,12 @@ function formatBytes(bytes: number): string {
 
 export default function ApplicationDetail() {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [detail, setDetail] = useState<ApplicationDetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showFullJd, setShowFullJd] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -36,6 +44,21 @@ export default function ApplicationDetail() {
     } catch (e) {
       setDetail((d) => (d ? { ...d, status: previous } : d))
       setError(e instanceof Error ? e.message : 'Failed to update status')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!id || !detail) return
+    if (!window.confirm(`Delete the ${detail.company} — ${detail.roleTitle} application? This can't be undone from here.`)) {
+      return
+    }
+    setDeleting(true)
+    try {
+      await deleteApplication(id)
+      navigate('/')
+    } catch (e) {
+      setDeleting(false)
+      setError(e instanceof Error ? e.message : 'Failed to delete application')
     }
   }
 
@@ -209,6 +232,21 @@ export default function ApplicationDetail() {
               </div>
             )}
           </section>
+
+          {error && (
+            <p className="font-body-sm text-body-sm text-error px-md">{error}</p>
+          )}
+
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-full flex items-center justify-center gap-sm p-md bg-surface-container-lowest border border-outline-variant rounded-xl hover:bg-error-container hover:text-on-error-container hover:border-error transition-all active:scale-95 text-error focus:outline-none focus:ring-2 focus:ring-error shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+          >
+            <span className="material-symbols-outlined text-[20px]">delete</span>
+            <span className="font-label-md text-label-md font-semibold">
+              {deleting ? 'Deleting…' : 'Delete Application'}
+            </span>
+          </button>
         </div>
       </main>
       <BottomNav />

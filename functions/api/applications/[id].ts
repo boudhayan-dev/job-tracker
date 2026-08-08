@@ -44,3 +44,20 @@ export const onRequestPatch: PagesFunction<Env> = async (context) => {
 
   return Response.json({ id, status: body.status })
 }
+
+export const onRequestDelete: PagesFunction<Env> = async (context) => {
+  const { env, params, data } = context
+  const id = params.id as string
+  const ownerEmail = data.userEmail as string
+
+  const existing = await getApplication(env.DB, id, ownerEmail)
+  if (!existing) {
+    return Response.json({ error: 'not found' }, { status: 404 })
+  }
+
+  await env.DB.prepare('UPDATE applications SET is_deleted = 1, updated_at = ? WHERE id = ? AND owner_email = ?')
+    .bind(new Date().toISOString(), id, ownerEmail)
+    .run()
+
+  return Response.json({ id })
+}
