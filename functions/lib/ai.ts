@@ -42,6 +42,18 @@ async function runJson<T>(ai: Ai, systemPrompt: string, userPrompt: string): Pro
   try {
     return JSON.parse(jsonText) as T
   } catch {
+    // Model sometimes prefaces the JSON with an explanation (e.g. "this page has no real
+    // content, so..." before a low-confidence fallback object) instead of responding with
+    // ONLY JSON as instructed — fall back to pulling the first {...} object out of the prose.
+    const firstBrace = text.indexOf('{')
+    const lastBrace = text.lastIndexOf('}')
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      try {
+        return JSON.parse(text.slice(firstBrace, lastBrace + 1)) as T
+      } catch {
+        // fall through to AiJsonParseError below
+      }
+    }
     throw new AiJsonParseError(text)
   }
 }

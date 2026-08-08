@@ -9,6 +9,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
+      workbox: {
+        // Workbox's default SPA NavigationRoute serves index.html for every navigation-mode
+        // request, including the resume-file iframe's GET to /api/... — exclude API routes so
+        // they hit the network instead of getting swallowed by the app-shell fallback.
+        navigateFallbackDenylist: [/^\/api\//],
+      },
       manifest: {
         name: 'CareerRecall',
         short_name: 'CareerRecall',
@@ -35,6 +41,11 @@ export default defineConfig({
     }),
   ],
   server: {
+    proxy: {
+      '/api': 'http://localhost:8788',
+    },
+  },
+  preview: {
     proxy: {
       '/api': 'http://localhost:8788',
     },

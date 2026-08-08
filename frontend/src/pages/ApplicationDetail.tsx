@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import TopAppBar from '../components/TopAppBar'
 import BottomNav from '../components/BottomNav'
 import StatusSelect from '../components/StatusSelect'
-import { getApplication, updateApplicationStatus, type ApplicationDetailResponse } from '../lib/api'
+import { getApplication, resumeFileUrl, updateApplicationStatus, type ApplicationDetailResponse } from '../lib/api'
 import type { ApplicationStatus } from '../lib/status'
 
 function formatBytes(bytes: number): string {
@@ -14,7 +14,6 @@ function formatBytes(bytes: number): string {
 
 export default function ApplicationDetail() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const [detail, setDetail] = useState<ApplicationDetailResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -160,10 +159,12 @@ export default function ApplicationDetail() {
           </section>
 
           <section className="flex flex-col gap-sm">
-            <button
-              onClick={() => navigate(`/applications/${id}/resume`)}
-              disabled={!detail.resume}
-              className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm disabled:opacity-50 disabled:pointer-events-none"
+            <a
+              href={detail.resume && id ? resumeFileUrl(id) : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-disabled={!detail.resume}
+              className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm aria-disabled:opacity-50 aria-disabled:pointer-events-none"
             >
               <div className="flex items-center gap-md min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center flex-shrink-0">
@@ -179,7 +180,7 @@ export default function ApplicationDetail() {
                 </div>
               </div>
               <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary flex-shrink-0">open_in_new</span>
-            </button>
+            </a>
 
             <button
               onClick={() => setShowFullJd((v) => !v)}

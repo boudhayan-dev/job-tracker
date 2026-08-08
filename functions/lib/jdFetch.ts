@@ -49,7 +49,11 @@ async function fetchPlain(startUrl: URL): Promise<string> {
 }
 
 async function fetchViaBrowserRendering(url: string, browser: BrowserRun): Promise<string> {
-  const res = await browser.quickAction('markdown', { url })
+  // Default gotoOptions.waitUntil is "domcontentloaded", which fires before client-rendered
+  // pages (Naukri and similar JS-heavy listing sites) have populated real content — caught this
+  // in production capturing nothing but a lazy-load placeholder image. networkidle2 waits for
+  // the page's JS to settle first.
+  const res = await browser.quickAction('markdown', { url, gotoOptions: { waitUntil: 'networkidle2', timeout: 30000 } })
   if (!res.ok) return ''
   const data = (await res.json()) as { success: boolean; result?: string }
   return data.success && data.result ? data.result : ''
