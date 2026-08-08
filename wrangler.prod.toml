@@ -2,7 +2,7 @@
 # Not used directly by wrangler (Pages CLI only reads ./wrangler.toml) — scripts/deploy.sh
 # copies this file into place before deploying. See DEPLOYMENT.md.
 #
-# REPLACE_WITH_* placeholders get filled in during first-time prod deployment, once the
+# Placeholder values get filled in during first-time prod deployment, once the
 # real Cloudflare resources exist (see DEPLOYMENT.md "First-time prod deployment").
 
 name = "job-tracker-prod"

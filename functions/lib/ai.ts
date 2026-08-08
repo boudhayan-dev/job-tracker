@@ -2,6 +2,25 @@ import type { ParsedJd, WorkExperienceEntry } from './types'
 
 const MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast'
 
+// Thrown when the model ignores the "respond with ONLY JSON" instruction — e.g. it decides the
+// input isn't actually a job description/resume and explains itself in prose instead. This is a
+// real, expected failure mode (seen in production against bot-walled job listing pages), not a
+// bug to crash on — callers should catch this and turn it into a clean 4xx, not let it propagate
+// as an uncaught exception.
+export class AiJsonParseError extends Error {
+  constructor(public rawResponse: string) {
+    super('The AI did not return valid JSON.')
+  }
+}
+
+// Workers AI defaults max_tokens to 256 for this model — nowhere near enough for a resume
+// with a long skills list and several experience bullets, or a detailed JD. Hit unset, the
+// response silently truncates mid-generation into invalid JSON (looked like the model
+// "refusing" to return JSON; it was actually just cut off — root-caused against a real
+// resume in production). The model's context window is 24,000 tokens, so there's plenty of
+// headroom; this is generous on purpose rather than tuned to the smallest number that works.
+const MAX_OUTPUT_TOKENS = 3000
+
 // Runs a Workers AI chat completion and parses the response as JSON, tolerating
 // markdown code-fence wrapping that instruction-tuned models sometimes add.
 async function runJson<T>(ai: Ai, systemPrompt: string, userPrompt: string): Promise<T> {
@@ -11,6 +30,7 @@ async function runJson<T>(ai: Ai, systemPrompt: string, userPrompt: string): Pro
       { role: 'user', content: userPrompt },
     ],
     response_format: { type: 'json_object' },
+    max_tokens: MAX_OUTPUT_TOKENS,
   } as unknown as Parameters<Ai['run']>[1])
 
   const text =
@@ -19,7 +39,11 @@ async function runJson<T>(ai: Ai, systemPrompt: string, userPrompt: string): Pro
       : String(result)
 
   const jsonText = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '')
-  return JSON.parse(jsonText) as T
+  try {
+    return JSON.parse(jsonText) as T
+  } catch {
+    throw new AiJsonParseError(text)
+  }
 }
 
 export async function parseJobDescription(
@@ -87,12 +111,22 @@ Only include skills and experience that vary between resume versions — skip ed
 
 export async function generateNudges(
   ai: Ai,
-  input: { jdSummary: string; requirements: string[]; skills: string[]; workExperience: WorkExperienceEntry[] },
+  input: {
+    jdSummary: string
+    requirements: string[]
+    skills: string[]
+    workExperience: WorkExperienceEntry[]
+    notes?: string
+  },
 ): Promise<string[]> {
   const systemPrompt = `You help a job candidate prep for a recruiter call. Respond with ONLY a JSON object matching:
 {"nudges": string[]} — 3 to 5 short, punchy talking points that connect the candidate's claimed skills/experience to
 what this specific job asks for. Each nudge is one sentence, specific (name real skills/companies from the input),
-and phrased as something the candidate can say or remember, not generic advice.`
+and phrased as something the candidate can say or remember, not generic advice.${
+    input.notes?.trim()
+      ? ' The candidate also added personal notes not found in their resume — weight these highly, they know context the resume doesn\'t capture.'
+      : ''
+  }`
 
   const userPrompt = [
     `Job requirements: ${input.requirements.join(', ')}`,
@@ -101,7 +135,10 @@ and phrased as something the candidate can say or remember, not generic advice.`
     `Candidate's work experience bullets:\n${input.workExperience
       .flatMap((w) => w.bullets.map((b) => `- (${w.company} — ${w.title}) ${b}`))
       .join('\n')}`,
-  ].join('\n\n')
+    input.notes?.trim() && `Candidate's own notes (not on the resume, but true and worth using):\n${input.notes.trim()}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n')
 
   const parsed = await runJson<{ nudges: string[] }>(ai, systemPrompt, userPrompt)
   return Array.isArray(parsed.nudges) ? parsed.nudges.slice(0, 5) : []

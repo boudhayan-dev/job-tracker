@@ -11,7 +11,7 @@ import { crawlJd, createApplication, extractResume, uploadResume } from '../../l
 type Step = 'input' | 'jdReview' | 'resume' | 'confirm'
 
 const EMPTY_INPUT: JdInputValue = { source: 'paste', url: '', company: '', roleTitle: '', jdText: '' }
-const EMPTY_RESUME: ResumeDraft = { file: null, skills: [], workExperience: [] }
+const EMPTY_RESUME: ResumeDraft = { file: null, skills: [], workExperience: [], notes: '' }
 
 export default function TrackJob() {
   const navigate = useNavigate()
@@ -91,7 +91,11 @@ export default function TrackJob() {
         setCreatedId(id)
       }
       if (resume.file) {
-        await uploadResume(id, resume.file, { skills: resume.skills, workExperience: resume.workExperience })
+        await uploadResume(id, resume.file, {
+          skills: resume.skills,
+          workExperience: resume.workExperience,
+          notes: resume.notes,
+        })
       }
       navigate(`/applications/${id}`)
     } catch (e) {
@@ -121,6 +125,7 @@ export default function TrackJob() {
             value={resume}
             onChange={setResume}
             onFileSelected={handleResumeFileSelected}
+            onFileCleared={() => setExtractError(null)}
             extracting={extracting}
             extractError={extractError}
             onBack={() => {

@@ -1,4 +1,4 @@
-import { parseJobDescription } from '../../lib/ai'
+import { AiJsonParseError, parseJobDescription } from '../../lib/ai'
 import { fetchJobDescription } from '../../lib/jdFetch'
 import { UnsafeUrlError } from '../../lib/urlSafety'
 
@@ -52,12 +52,28 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     rawText = body.jdText ?? ''
   }
 
-  const parsed = await parseJobDescription(env.AI, {
-    rawText,
-    hintCompany: body.company ?? '',
-    hintRoleTitle: body.roleTitle ?? '',
-    sourceUrl: body.source === 'url' ? body.url : undefined,
-  })
+  let parsed: Awaited<ReturnType<typeof parseJobDescription>>
+  try {
+    parsed = await parseJobDescription(env.AI, {
+      rawText,
+      hintCompany: body.company ?? '',
+      hintRoleTitle: body.roleTitle ?? '',
+      sourceUrl: body.source === 'url' ? body.url : undefined,
+    })
+  } catch (e) {
+    if (e instanceof AiJsonParseError) {
+      return Response.json(
+        {
+          error:
+            body.source === 'url'
+              ? "Couldn't parse a job description from that page — it may require login or block automated access. Try pasting the job description text instead."
+              : "Couldn't parse a job description from that text. Try double-checking it's the full job description.",
+        },
+        { status: 422 },
+      )
+    }
+    throw e
+  }
 
   return Response.json({
     ...parsed,

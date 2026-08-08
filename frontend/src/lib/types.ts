@@ -27,4 +27,5 @@ export type ResumeDraft = {
   file: File | null
   skills: string[]
   workExperience: WorkExperienceEntry[]
+  notes: string
 }

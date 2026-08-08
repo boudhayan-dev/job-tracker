@@ -37,6 +37,7 @@ export type ResumeRow = {
   skills: string
   work_experience: string
   raw_text: string
+  notes: string
   created_at: string
 }
 

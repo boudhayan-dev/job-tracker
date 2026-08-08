@@ -28,7 +28,13 @@ export type ApplicationDetailResponse = {
   jdUrl: string | null
   requirements: string[]
   appliedDate: string
-  resume: { fileName: string; fileSizeBytes: number; skills: string[]; workExperience: WorkExperienceEntry[] } | null
+  resume: {
+    fileName: string
+    fileSizeBytes: number
+    skills: string[]
+    workExperience: WorkExperienceEntry[]
+    notes: string
+  } | null
   nudges: string[]
 }
 
@@ -76,19 +82,26 @@ export function extractResume(file: File): Promise<ExtractResumeResponse> {
 }
 
 export type UploadResumeResponse = {
-  resume: { fileName: string; fileSizeBytes: number; skills: string[]; workExperience: WorkExperienceEntry[] }
+  resume: {
+    fileName: string
+    fileSizeBytes: number
+    skills: string[]
+    workExperience: WorkExperienceEntry[]
+    notes: string
+  }
   nudges: string[]
 }
 
 export function uploadResume(
   applicationId: string,
   file: File,
-  reviewed: { skills: string[]; workExperience: WorkExperienceEntry[] },
+  reviewed: { skills: string[]; workExperience: WorkExperienceEntry[]; notes: string },
 ): Promise<UploadResumeResponse> {
   const formData = new FormData()
   formData.append('resume', file)
   formData.append('skills', JSON.stringify(reviewed.skills))
   formData.append('workExperience', JSON.stringify(reviewed.workExperience))
+  formData.append('notes', reviewed.notes)
   return request(`/applications/${applicationId}/resume`, { method: 'POST', body: formData })
 }
 

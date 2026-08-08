@@ -140,6 +140,12 @@ export default function ApplicationDetail() {
                 Nudges generate automatically once a resume is uploaded.
               </p>
             )}
+            {detail.resume?.notes.trim() && (
+              <div className="border-t border-[#C7D2FE] mt-md pt-md">
+                <h4 className="font-label-md text-label-md text-primary mb-sm uppercase">Your Notes</h4>
+                <p className="font-body-sm text-body-sm text-on-surface whitespace-pre-wrap">{detail.resume.notes}</p>
+              </div>
+            )}
           </section>
         </div>
 
@@ -159,12 +165,12 @@ export default function ApplicationDetail() {
               disabled={!detail.resume}
               className="w-full flex items-center justify-between p-md bg-surface-container-lowest border border-surface-container-highest rounded-xl hover:bg-surface-container-low hover:border-primary transition-all active:scale-95 group text-left focus:outline-none focus:ring-2 focus:ring-primary shadow-sm disabled:opacity-50 disabled:pointer-events-none"
             >
-              <div className="flex items-center gap-md">
+              <div className="flex items-center gap-md min-w-0">
                 <div className="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined">picture_as_pdf</span>
                 </div>
-                <div>
-                  <h4 className="font-headline-md text-[16px] font-semibold text-on-surface group-hover:text-primary transition-colors">
+                <div className="min-w-0">
+                  <h4 className="font-headline-md text-[16px] font-semibold text-on-surface group-hover:text-primary transition-colors break-words">
                     {detail.resume?.fileName ?? 'Original Resume'}
                   </h4>
                   <p className="font-body-sm text-sm text-on-surface-variant">
@@ -172,7 +178,7 @@ export default function ApplicationDetail() {
                   </p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary">open_in_new</span>
+              <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary flex-shrink-0">open_in_new</span>
             </button>
 
             <button

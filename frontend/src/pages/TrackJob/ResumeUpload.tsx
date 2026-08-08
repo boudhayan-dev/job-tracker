@@ -7,6 +7,7 @@ type Props = {
   value: ResumeDraft
   onChange: (value: ResumeDraft) => void
   onFileSelected: (file: File) => void
+  onFileCleared: () => void
   extracting: boolean
   extractError: string | null
   onBack: () => void
@@ -17,6 +18,7 @@ export default function ResumeUpload({
   value,
   onChange,
   onFileSelected,
+  onFileCleared,
   extracting,
   extractError,
   onBack,
@@ -50,6 +52,12 @@ export default function ResumeUpload({
     onChange({ ...value, workExperience: value.workExperience.filter((_, i) => i !== index) })
   }
 
+  const clearFile = () => {
+    onChange({ ...value, file: null, skills: [], workExperience: [] })
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    onFileCleared()
+  }
+
   return (
     <div>
       <Stepper activeIndex={1} />
@@ -78,10 +86,23 @@ export default function ResumeUpload({
             if (file) onFileSelected(file)
           }}
           onClick={() => fileInputRef.current?.click()}
-          className={`flex flex-col items-center justify-center gap-sm border-2 border-dashed rounded-lg p-xl text-center cursor-pointer transition-colors ${
+          className={`relative flex flex-col items-center justify-center gap-sm border-2 border-dashed rounded-lg p-xl text-center cursor-pointer transition-colors ${
             dragOver ? 'border-primary bg-primary-container/10' : 'border-outline-variant hover:border-primary'
           }`}
         >
+          {value.file && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                clearFile()
+              }}
+              aria-label="Remove selected resume"
+              className="absolute top-sm right-sm p-xs rounded-full text-on-surface-variant hover:bg-surface-container-low hover:text-error transition-colors"
+            >
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          )}
           <span className="material-symbols-outlined text-primary text-[32px]">upload_file</span>
           {value.file ? (
             <>
@@ -207,6 +228,21 @@ export default function ResumeUpload({
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="flex flex-col gap-sm">
+          <label className="font-label-md text-label-md text-on-surface-variant">Additional notes</label>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Anything true about you for this role that isn't in the resume or skills above — used to generate
+            better recall nudges.
+          </p>
+          <textarea
+            rows={3}
+            placeholder="e.g. Actually led that migration solo, or have unlisted experience with their exact stack..."
+            value={value.notes}
+            onChange={(e) => onChange({ ...value, notes: e.target.value })}
+            className="w-full p-3 bg-surface-bright border border-outline-variant rounded-lg font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 resize-none"
+          />
         </div>
       </div>
 

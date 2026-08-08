@@ -1,4 +1,4 @@
-import { extractResumeFields, generateNudges, sanitizeWorkExperience } from '../../../lib/ai'
+import { AiJsonParseError, extractResumeFields, generateNudges, sanitizeWorkExperience } from '../../../lib/ai'
 import { getApplication, newId } from '../../../lib/db'
 import { extractPdfText } from '../../../lib/pdf'
 
@@ -26,10 +26,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   const bytes = await file.arrayBuffer()
+  // Captured immediately: PDF extraction (unpdf/PDF.js) appears to transfer this ArrayBuffer
+  // internally, which detaches it as a side effect — bytes.byteLength reads back as 0 after
+  // extractPdfText runs even though extraction itself completes fine. Read the real length now.
+  const fileSizeBytes = bytes.byteLength
   const r2Key = `resumes/${applicationId}/${newId()}-${file.name}`
   await env.RESUMES.put(r2Key, bytes, { httpMetadata: { contentType: 'application/pdf' } })
 
   const rawText = await extractPdfText(bytes)
+  const notesRaw = formData.get('notes')
+  const notes = typeof notesRaw === 'string' ? notesRaw : ''
 
   // The Track Job wizard extracts via /api/resume/extract up front and lets the user review/
   // edit the result before saving — when those (possibly edited) fields are submitted here, we
@@ -43,16 +49,26 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     skills = (JSON.parse(skillsRaw) as unknown[]).filter((s): s is string => typeof s === 'string')
     workExperience = sanitizeWorkExperience(JSON.parse(workExperienceRaw))
   } else {
-    const extracted = await extractResumeFields(env.AI, rawText)
-    skills = extracted.skills
-    workExperience = extracted.workExperience
+    // No reviewed fields submitted — extract fresh. If the model refuses to return JSON (it
+    // occasionally decides the text isn't resume-shaped and explains itself in prose instead),
+    // don't fail the whole upload over it — the PDF is still saved, just with empty fields the
+    // user can fill in by hand afterward.
+    try {
+      const extracted = await extractResumeFields(env.AI, rawText)
+      skills = extracted.skills
+      workExperience = extracted.workExperience
+    } catch (e) {
+      if (!(e instanceof AiJsonParseError)) throw e
+      skills = []
+      workExperience = []
+    }
   }
 
   const resumeId = newId()
   const now = new Date().toISOString()
   await env.DB.prepare(
-    `INSERT INTO resumes (id, application_id, r2_object_key, file_name, file_size_bytes, skills, work_experience, raw_text, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO resumes (id, application_id, r2_object_key, file_name, file_size_bytes, skills, work_experience, raw_text, notes, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(application_id) DO UPDATE SET
        r2_object_key = excluded.r2_object_key,
        file_name = excluded.file_name,
@@ -60,6 +76,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
        skills = excluded.skills,
        work_experience = excluded.work_experience,
        raw_text = excluded.raw_text,
+       notes = excluded.notes,
        created_at = excluded.created_at`,
   )
     .bind(
@@ -67,20 +84,29 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       applicationId,
       r2Key,
       file.name,
-      bytes.byteLength,
+      fileSizeBytes,
       JSON.stringify(skills),
       JSON.stringify(workExperience),
       rawText,
+      notes,
       now,
     )
     .run()
 
-  const nudgePoints = await generateNudges(env.AI, {
-    jdSummary: application.jd_summary,
-    requirements: JSON.parse(application.requirements) as string[],
-    skills,
-    workExperience,
-  })
+  // Nudges are supplementary — the resume row above is already committed, so a nudge failure
+  // (same model-refuses-JSON failure mode) shouldn't fail the whole request or roll anything back.
+  let nudgePoints: string[] = []
+  try {
+    nudgePoints = await generateNudges(env.AI, {
+      jdSummary: application.jd_summary,
+      requirements: JSON.parse(application.requirements) as string[],
+      skills,
+      workExperience,
+      notes,
+    })
+  } catch (e) {
+    if (!(e instanceof AiJsonParseError)) throw e
+  }
 
   const nudgeId = newId()
   await env.DB.prepare(
@@ -92,7 +118,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     .run()
 
   return Response.json({
-    resume: { fileName: file.name, fileSizeBytes: bytes.byteLength, skills, workExperience },
+    resume: { fileName: file.name, fileSizeBytes, skills, workExperience, notes },
     nudges: nudgePoints,
   })
 }

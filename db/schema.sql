@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS resumes (
   skills TEXT NOT NULL DEFAULT '[]',
   work_experience TEXT NOT NULL DEFAULT '[]',
   raw_text TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

@@ -5,8 +5,14 @@ environment. There are three places it runs:
 
 - **Local** — `wrangler pages dev` + local D1/R2 emulation. No Cloudflare resources needed, except
   Workers AI and Browser Rendering (see the note below).
-- **Dev** — `job-tracker-dev.pages.dev`, its own D1 database, R2 bucket, and Access application.
-- **Prod** — `job-tracker-prod.pages.dev`, same shape, fully separate resources.
+- **Dev** — a `job-tracker-dev*.pages.dev` domain (the exact one Cloudflare assigns — see the domain
+  note below), its own D1 database, R2 bucket, and Access application.
+- **Prod** — `job-tracker-prod*.pages.dev`, same shape, fully separate resources.
+
+**Domain note:** `*.pages.dev` subdomains are global across every Cloudflare account, not just
+yours — if `job-tracker-dev.pages.dev` is already taken by someone else, Cloudflare assigns
+`job-tracker-dev-<random>.pages.dev` instead. Check `wrangler pages project list` or the dashboard
+for the real one after creating the project; don't assume the plain name.
 
 Config lives in three files at the repo root:
 
@@ -119,32 +125,60 @@ in local dev. Without it, every other route still works; those three return a 50
    npm run db:migrate:dev
    ```
 
-6. **Set up Cloudflare Access** (dashboard, not CLI):
+6. **Bootstrap deploy, before Access exists** — Cloudflare Zero Trust won't let you pick a
+   `*.pages.dev` domain to protect in an Access policy until that Pages project has at least one
+   live deployment, so this first deploy necessarily goes out **without** the Access gate:
+   ```bash
+   npm run deploy:dev
+   ```
+   `wrangler.dev.toml` still has placeholder `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` at this point —
+   `scripts/deploy.sh` detects that, warns you explicitly that the app will be briefly
+   unauthenticated and public, and asks for a `y` confirmation before proceeding. This is the one
+   deploy in the whole lifecycle where that's expected and unavoidable.
+
+   Take the deployed URL Wrangler prints — check `wrangler pages project list` if you need it
+   again — and confirm it's your actual domain: **`*.pages.dev` subdomains are global across every
+   Cloudflare account**, so if `job-tracker-dev.pages.dev` was already taken by someone else,
+   Cloudflare will have assigned `job-tracker-dev-<random>.pages.dev` instead.
+
+7. **Set up Cloudflare Access now** (dashboard, not CLI), using that real domain:
+   - **Add Google as an identity provider first — this is an account-level, one-time setup, not
+     an option inside the application wizard.** New Zero Trust accounts default to "Cloudflare"
+     as the only login method, so Google won't appear in the app's IdP picker until you add it:
+     1. Find your team name: Zero Trust → Settings → General → "Team domain" — that's the
+        `<team>` in `<team>.cloudflareaccess.com`.
+     2. In [Google Cloud Console](https://console.cloud.google.com): create/select a project →
+        APIs & Services → Credentials → Configure Consent Screen (External) → Credentials →
+        Create OAuth client → type **Web application**.
+        - Authorized JavaScript origins: `https://<team>.cloudflareaccess.com`
+        - Authorized redirect URIs: `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`
+        - Copy the **Client ID** and **Client secret**.
+     3. Back in Cloudflare: Zero Trust → Integrations → Identity providers → Add new identity
+        provider → **Google** → paste Client ID (as "App ID") and Client secret → Save.
    - Zero Trust → Access → Applications → **Add an application** → *Self-hosted*.
-   - Domain: `job-tracker-dev.pages.dev` (or your actual dev domain once you know it — Pages
-     assigns this on first deploy, so it's fine to deploy once first and come back to this step).
-   - Identity provider: Google (add it under Settings → Authentication if not already configured).
+   - Domain: the exact `*.pages.dev` domain from step 6.
+   - Identity provider: Google now shows up automatically if "Accept all available identity
+     providers" is on; otherwise select it explicitly under "Choose available identity providers".
    - Policy: **Allow**, rule = *Emails* = `boudhayan.dev@gmail.com`, `kamalkalichoudhury36@gmail.com`
      (add both as separate values in the same Emails rule — anyone not on this list never gets a
-     valid session, regardless of what they authenticate with).
-   - **Bot protection**: on the same policy, add a second condition (AND) — *Require* → *Bot Score* →
-     greater than `30` (Cloudflare computes this for every request at no extra cost; it blocks
-     scripted/automated traffic from ever reaching the login prompt, on top of the email allowlist
-     and the Google sign-in itself). This is defense-in-depth, not strictly load-bearing — Access +
-     Google OAuth already stops anything that can't complete a real Google login — but it's a couple
-     of clicks and cuts down noise from bots probing the login page.
-   - Save, then copy the **Application Audience (AUD) Tag** from the application's Overview tab.
+     valid session, regardless of what they authenticate with). No additional bot-protection
+     condition — `Bot Score` requires a paid Enterprise Bot Management add-on and isn't available
+     here; Google sign-in + this email allowlist is already the real, load-bearing boundary.
+   - Save — **Access starts protecting the domain immediately**, no redeploy needed. Then copy the
+     **Application Audience (AUD) Tag** from the application's Overview tab.
    - Fill both into `wrangler.dev.toml`:
      - `ACCESS_TEAM_DOMAIN` = `<your-team-name>.cloudflareaccess.com`
      - `ACCESS_AUD` = the AUD tag you just copied
 
-7. **Deploy**:
+8. **Redeploy** so the tracked config matches reality (optional for protection, since Access is
+   already live from the moment you saved it above — this just keeps `wrangler.dev.toml` accurate
+   for next time and re-runs without the unprotected-deploy warning):
    ```bash
    npm run deploy:dev
    ```
 
-8. Visit `https://job-tracker-dev.pages.dev`. You should hit the Access login gate first (Google
-   sign-in), then land in the app.
+9. Visit your dev domain. You should hit the Access login gate first (Google sign-in), then land
+   in the app.
 
 ## Successive dev deployments
 
@@ -166,12 +200,18 @@ npx wrangler pages project create job-tracker-prod --production-branch prod
 npx wrangler d1 create career-recall-prod   # copy database_id into wrangler.prod.toml
 npx wrangler r2 bucket create career-recall-prod-resumes
 npm run db:migrate:prod
+npm run deploy:prod   # bootstrap deploy — same "confirm unprotected" prompt as dev, see step 6 above
 ```
 
-Then repeat the Access application setup (step 6 above) for `job-tracker-prod.pages.dev`, filling
-`ACCESS_TEAM_DOMAIN` / `ACCESS_AUD` into `wrangler.prod.toml` — **use a separate Access application
-from dev**, even though the policy (same two emails, same bot-score rule) is identical, so the two
-environments stay fully independent.
+Check the real assigned domain (same global-uniqueness caveat as dev — don't assume it's exactly
+`job-tracker-prod.pages.dev`), then repeat the Access application setup (step 7 above) against it,
+filling `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD` into `wrangler.prod.toml` — **use a separate Access
+application from dev**, even though the policy (same two emails) is identical, so the two
+environments stay fully independent. Redeploy once more afterward to sync the config:
+
+```bash
+npm run deploy:prod
+```
 
 ```bash
 npm run deploy:prod
@@ -189,9 +229,14 @@ Same migration caveat as dev: run `npm run db:migrate:prod` first if the schema 
 
 ## Troubleshooting
 
-- **`deploy:dev`/`deploy:prod` refuses to run, mentions `REPLACE_WITH_`** — you skipped one of the
-  "copy the ID into wrangler.\<env\>.toml" steps above. The script checks for this deliberately
-  rather than deploying a broken config.
+- **`deploy:dev`/`deploy:prod` refuses to run, mentions the D1 database_id placeholder** — you
+  skipped "copy the ID into wrangler.\<env\>.toml" for D1. Hard-blocked deliberately — there's no
+  legitimate reason that one can't be filled in before deploying.
+- **`deploy:dev`/`deploy:prod` prompts "Deploy anyway, unprotected?"** — this is expected on the
+  very first deploy of an environment, before Access exists (see "Bootstrap deploy" above). Not
+  expected on later deploys — if you see it again after Access is already set up, it means
+  `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` in that env's config got reverted or never got filled in; check
+  `git diff wrangler.<env>.toml`.
 - **`CLOUDFLARE_API_TOKEN` / non-interactive environment error** — run `wrangler login`
   interactively first; it can't complete the OAuth flow non-interactively.
 - **Deploy succeeds but the site 500s on JD parsing / resume upload** — check that the AI/Browser

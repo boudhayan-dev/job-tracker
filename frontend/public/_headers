@@ -1,0 +1,9 @@
+# Cloudflare Pages doesn't have a default MIME type mapping for .webmanifest, and can serve it
+# with a generic Content-Type that some browsers won't accept for PWA installability checks.
+# Setting it explicitly is the documented fix.
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+
+/sw.js
+  Content-Type: application/javascript; charset=utf-8
+  Service-Worker-Allowed: /

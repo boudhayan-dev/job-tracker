@@ -35,6 +35,7 @@ export function toApplicationDetail(
           fileSizeBytes: resume.file_size_bytes,
           skills: JSON.parse(resume.skills) as string[],
           workExperience: JSON.parse(resume.work_experience) as unknown[],
+          notes: resume.notes,
         }
       : null,
     nudges: nudge ? (JSON.parse(nudge.points) as string[]) : [],

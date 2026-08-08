@@ -1,4 +1,4 @@
-import { extractResumeFields } from '../../lib/ai'
+import { AiJsonParseError, extractResumeFields } from '../../lib/ai'
 import { extractPdfText } from '../../lib/pdf'
 
 // Preview-only: extracts skills/work-experience from an uploaded PDF for the Track Job
@@ -24,7 +24,17 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   const bytes = await file.arrayBuffer()
   const rawText = await extractPdfText(bytes)
-  const { skills, workExperience } = await extractResumeFields(env.AI, rawText)
 
-  return Response.json({ skills, workExperience })
+  try {
+    const { skills, workExperience } = await extractResumeFields(env.AI, rawText)
+    return Response.json({ skills, workExperience })
+  } catch (e) {
+    if (e instanceof AiJsonParseError) {
+      return Response.json(
+        { error: "Couldn't extract details from that PDF. You can still fill skills/experience in manually." },
+        { status: 422 },
+      )
+    }
+    throw e
+  }
 }

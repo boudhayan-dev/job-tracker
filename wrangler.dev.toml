@@ -2,7 +2,7 @@
 # Not used directly by wrangler (Pages CLI only reads ./wrangler.toml) — scripts/deploy.sh
 # copies this file into place before deploying. See DEPLOYMENT.md.
 #
-# REPLACE_WITH_* placeholders get filled in during first-time dev deployment, once the
+# Placeholder values get filled in during first-time dev deployment, once the
 # real Cloudflare resources exist (see DEPLOYMENT.md "First-time dev deployment").
 
 name = "job-tracker-dev"
@@ -13,7 +13,7 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "career-recall-dev"
-database_id = "REPLACE_WITH_DEV_D1_DATABASE_ID"
+database_id = "afe68b45-5dfd-4088-9dee-93afd117b378"
 
 [[r2_buckets]]
 binding = "RESUMES"
@@ -26,5 +26,5 @@ binding = "AI"
 binding = "BROWSER"
 
 [vars]
-ACCESS_TEAM_DOMAIN = "REPLACE_WITH_YOUR_TEAM.cloudflareaccess.com"
-ACCESS_AUD = "REPLACE_WITH_DEV_ACCESS_APPLICATION_AUD_TAG"
+ACCESS_TEAM_DOMAIN = "boudhayan-dev-pages.cloudflareaccess.com"
+ACCESS_AUD = "8acb1ec6f5d9893d659082241c91a11db1b2d18af74aad4e98c7c9dc51b9632d"

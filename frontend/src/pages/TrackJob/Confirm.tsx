@@ -68,6 +68,13 @@ export default function Confirm({ jd, resume, onBack, onSave, saving, error }: P
             {resume.workExperience.length} work experience {resume.workExperience.length === 1 ? 'entry' : 'entries'}
           </p>
         </div>
+
+        {resume.notes.trim() && (
+          <div className="border-t border-outline-variant pt-md">
+            <p className="font-label-md text-label-md text-on-surface-variant mb-xs">Additional Notes</p>
+            <p className="font-body-sm text-body-sm text-on-surface whitespace-pre-wrap">{resume.notes}</p>
+          </div>
+        )}
       </div>
 
       {error && <p className="max-w-2xl mx-auto font-body-sm text-body-sm text-error mt-md">{error}</p>}
