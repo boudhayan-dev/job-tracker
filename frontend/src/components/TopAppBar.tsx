@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useIdentity } from '../lib/useIdentity'
 
@@ -21,6 +22,7 @@ export default function TopAppBar({ title = 'CareerRecall', showBack = false }: 
   const navigate = useNavigate()
   const { name, email, photoUrl } = useIdentity()
   const label = name ?? email ?? undefined
+  const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="bg-surface dark:bg-inverse-surface w-full sticky top-0 z-40 border-b border-outline-variant dark:border-outline">
@@ -38,17 +40,43 @@ export default function TopAppBar({ title = 'CareerRecall', showBack = false }: 
         <h1 className="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">
           {title}
         </h1>
-        <div
-          title={label}
-          className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant flex items-center justify-center flex-shrink-0"
-        >
-          {photoUrl ? (
-            <img src={photoUrl} alt={label ?? 'Profile'} className="w-full h-full object-cover" />
-          ) : label ? (
-            <span className="font-label-md text-label-md font-bold text-secondary">
-              {initialsFor(name, email)}
-            </span>
-          ) : null}
+        <div className="relative">
+          <button
+            type="button"
+            title={label}
+            aria-label="Account menu"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="w-8 h-8 rounded-full bg-surface-container-high overflow-hidden border border-outline-variant flex items-center justify-center flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {photoUrl ? (
+              <img src={photoUrl} alt={label ?? 'Profile'} className="w-full h-full object-cover" />
+            ) : label ? (
+              <span className="font-label-md text-label-md font-bold text-secondary">
+                {initialsFor(name, email)}
+              </span>
+            ) : null}
+          </button>
+
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+              <div className="absolute right-0 top-full mt-xs z-20 w-56 bg-surface border border-outline-variant rounded-lg shadow-md py-xs">
+                {(name || email) && (
+                  <div className="px-md py-sm border-b border-outline-variant">
+                    {name && <p className="font-label-md text-label-md font-semibold text-on-surface truncate">{name}</p>}
+                    {email && <p className="font-body-sm text-body-sm text-on-surface-variant truncate">{email}</p>}
+                  </div>
+                )}
+                <a
+                  href="/cdn-cgi/access/logout"
+                  className="flex items-center gap-sm px-md py-sm font-body-sm text-body-sm text-on-surface hover:bg-surface-container-low transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">logout</span>
+                  Log out
+                </a>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>

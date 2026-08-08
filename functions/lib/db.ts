@@ -42,23 +42,46 @@ export function toApplicationDetail(
   }
 }
 
-export async function getApplication(db: D1Database, id: string): Promise<ApplicationRow | null> {
-  const row = await db.prepare('SELECT * FROM applications WHERE id = ?').bind(id).first<ApplicationRow>()
+// Scoped by owner_email so one trusted user can never read (or 404-probe the existence of)
+// another's application — the row simply doesn't come back if it isn't theirs.
+export async function getApplication(db: D1Database, id: string, ownerEmail: string): Promise<ApplicationRow | null> {
+  const row = await db
+    .prepare('SELECT * FROM applications WHERE id = ? AND owner_email = ?')
+    .bind(id, ownerEmail)
+    .first<ApplicationRow>()
   return row ?? null
 }
 
-export async function getResumeForApplication(db: D1Database, applicationId: string): Promise<ResumeRow | null> {
+// Joins through applications to enforce the same per-owner scoping on the resume, since
+// resumes carry no owner_email of their own — ownership is inherited from the parent application.
+export async function getResumeForApplication(
+  db: D1Database,
+  applicationId: string,
+  ownerEmail: string,
+): Promise<ResumeRow | null> {
   const row = await db
-    .prepare('SELECT * FROM resumes WHERE application_id = ?')
-    .bind(applicationId)
+    .prepare(
+      `SELECT resumes.* FROM resumes
+       JOIN applications ON applications.id = resumes.application_id
+       WHERE resumes.application_id = ? AND applications.owner_email = ?`,
+    )
+    .bind(applicationId, ownerEmail)
     .first<ResumeRow>()
   return row ?? null
 }
 
-export async function getNudgesForApplication(db: D1Database, applicationId: string): Promise<NudgeRow | null> {
+export async function getNudgesForApplication(
+  db: D1Database,
+  applicationId: string,
+  ownerEmail: string,
+): Promise<NudgeRow | null> {
   const row = await db
-    .prepare('SELECT * FROM nudges WHERE application_id = ?')
-    .bind(applicationId)
+    .prepare(
+      `SELECT nudges.* FROM nudges
+       JOIN applications ON applications.id = nudges.application_id
+       WHERE nudges.application_id = ? AND applications.owner_email = ?`,
+    )
+    .bind(applicationId, ownerEmail)
     .first<NudgeRow>()
   return row ?? null
 }

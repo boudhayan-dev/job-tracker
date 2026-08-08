@@ -6,10 +6,11 @@ import { getResumeForApplication } from '../../../../lib/db'
 // fine (a plain fetch/save doesn't care) but renders blank inside an <iframe>, which is exactly
 // what was happening before this handled Range requests and set Content-Length/Accept-Ranges.
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { request, env, params } = context
+  const { request, env, params, data } = context
   const applicationId = params.id as string
+  const ownerEmail = data.userEmail as string
 
-  const resume = await getResumeForApplication(env.DB, applicationId)
+  const resume = await getResumeForApplication(env.DB, applicationId, ownerEmail)
   if (!resume) {
     return Response.json({ error: 'not found' }, { status: 404 })
   }

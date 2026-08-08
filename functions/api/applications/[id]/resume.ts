@@ -3,10 +3,11 @@ import { getApplication, newId } from '../../../lib/db'
 import { extractPdfText } from '../../../lib/pdf'
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
-  const { request, env, params } = context
+  const { request, env, params, data } = context
   const applicationId = params.id as string
+  const ownerEmail = data.userEmail as string
 
-  const application = await getApplication(env.DB, applicationId)
+  const application = await getApplication(env.DB, applicationId, ownerEmail)
   if (!application) {
     return Response.json({ error: 'not found' }, { status: 404 })
   }

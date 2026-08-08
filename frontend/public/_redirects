@@ -1,0 +1,3 @@
+# SPA fallback for deep-link navigation/refresh (e.g. /applications/:id) — Pages Functions
+# routes (/api/*) are matched before _redirects is ever consulted, so this can't shadow them.
+/*    /index.html   200

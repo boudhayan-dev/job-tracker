@@ -31,20 +31,24 @@ async function getJwks(teamDomain: string): Promise<JsonWebKey[]> {
   return keys
 }
 
-async function verifyAccessJwt(token: string, teamDomain: string, aud: string): Promise<boolean> {
+// Returns the verified token's email on success, null on any failure — the caller turns a
+// null into a 401 rather than this function throwing, so every failure mode (bad signature,
+// expired, wrong audience, missing email claim) is handled uniformly.
+async function verifyAccessJwt(token: string, teamDomain: string, aud: string): Promise<string | null> {
   const [headerPart, payloadPart, signaturePart] = token.split('.')
-  if (!headerPart || !payloadPart || !signaturePart) return false
+  if (!headerPart || !payloadPart || !signaturePart) return null
 
   const header = decodeJwtPart<AccessJwtHeader>(headerPart)
   const payload = decodeJwtPart<AccessJwtPayload>(payloadPart)
 
-  if (payload.exp * 1000 < Date.now()) return false
+  if (payload.exp * 1000 < Date.now()) return null
   const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud]
-  if (!audiences.includes(aud)) return false
+  if (!audiences.includes(aud)) return null
+  if (!payload.email) return null
 
   const keys = await getJwks(teamDomain)
   const jwk = keys.find((k) => (k as JsonWebKey & { kid?: string }).kid === header.kid)
-  if (!jwk) return false
+  if (!jwk) return null
 
   const cryptoKey = await crypto.subtle.importKey(
     'jwk',
@@ -56,16 +60,36 @@ async function verifyAccessJwt(token: string, teamDomain: string, aud: string): 
 
   const signedData = new TextEncoder().encode(`${headerPart}.${payloadPart}`)
   const signature = base64UrlDecode(signaturePart)
-  return crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, signature, signedData)
+  const valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, signature, signedData)
+  return valid ? payload.email : null
+}
+
+// No Access gate locally (ACCESS_TEAM_DOMAIN/ACCESS_AUD unset) — every application row still
+// needs an owner_email, so local dev is treated as a single fixed "user".
+const LOCAL_DEV_EMAIL = 'local-dev@localhost'
+
+// Every response from here carries per-user data (or an auth decision that could change the
+// next second, e.g. right after logout) — none of it may be cached by the browser's plain HTTP
+// cache. Without this, a fetch() issued by already-running client JS can silently replay a
+// stale cached response after logout, since a hard reload only reliably busts cache for the
+// page's own initial resources, not for later dynamic fetch() calls. Only sets the header when
+// the handler hasn't already set its own (the resume file route intentionally allows short-lived
+// private caching for PDF viewing performance).
+async function withNoStoreDefault(response: Response): Promise<Response> {
+  if (response.headers.has('Cache-Control')) return response
+  const headers = new Headers(response.headers)
+  headers.set('Cache-Control', 'no-store')
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
 }
 
 export const onRequest: PagesFunction<Env> = async (context) => {
-  const { request, env, next } = context
+  const { request, env, next, data } = context
   const teamDomain = env.ACCESS_TEAM_DOMAIN
   const aud = env.ACCESS_AUD
 
   if (!teamDomain || !aud) {
-    return next()
+    data.userEmail = LOCAL_DEV_EMAIL
+    return withNoStoreDefault(await next())
   }
 
   const token =
@@ -78,17 +102,18 @@ export const onRequest: PagesFunction<Env> = async (context) => {
       ?.slice('CF_Authorization='.length)
 
   if (!token) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: 'Unauthorized' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
   }
 
   try {
-    const valid = await verifyAccessJwt(token, teamDomain, aud)
-    if (!valid) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    const email = await verifyAccessJwt(token, teamDomain, aud)
+    if (!email) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
     }
+    data.userEmail = email
   } catch {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    return Response.json({ error: 'Unauthorized' }, { status: 401, headers: { 'Cache-Control': 'no-store' } })
   }
 
-  return next()
+  return withNoStoreDefault(await next())
 }

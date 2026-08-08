@@ -10,10 +10,16 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       workbox: {
-        // Workbox's default SPA NavigationRoute serves index.html for every navigation-mode
-        // request, including the resume-file iframe's GET to /api/... — exclude API routes so
-        // they hit the network instead of getting swallowed by the app-shell fallback.
-        navigateFallbackDenylist: [/^\/api\//],
+        // This app sits behind Cloudflare Access — every page navigation needs to reach the
+        // network so Access can gate it (login redirect when logged out, silent pass-through
+        // when authenticated). Workbox's default navigateFallback serves the cached app shell
+        // for every navigation instead, which bypasses Access entirely: after a real logout, the
+        // page loaded from cache anyway, and its API calls hit a CORS-blocked Access redirect
+        // ("Failed to fetch") instead of ever reaching the login page. Disabling it means
+        // navigations always hit the network — deep-link routes like /applications/:id are
+        // handled instead by the origin's _redirects SPA fallback, which only takes effect once
+        // Access has already let the request through.
+        navigateFallback: undefined,
       },
       manifest: {
         name: 'CareerRecall',

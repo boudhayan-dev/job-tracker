@@ -24,6 +24,7 @@ export type ApplicationRow = {
   requirements: string
   status: ApplicationStatus
   applied_date: string
+  owner_email: string
   created_at: string
   updated_at: string
 }
