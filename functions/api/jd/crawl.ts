@@ -1,5 +1,6 @@
 import { parseJobDescription } from '../../lib/ai'
 import { fetchJobDescription } from '../../lib/jdFetch'
+import { UnsafeUrlError } from '../../lib/urlSafety'
 
 type RequestBody = {
   source: 'url' | 'paste'
@@ -27,7 +28,15 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   let usedBrowserRendering = false
 
   if (body.source === 'url' && body.url) {
-    const result = await fetchJobDescription(body.url, env.BROWSER)
+    let result: Awaited<ReturnType<typeof fetchJobDescription>>
+    try {
+      result = await fetchJobDescription(body.url, env.BROWSER)
+    } catch (e) {
+      if (e instanceof UnsafeUrlError) {
+        return Response.json({ error: e.message }, { status: 400 })
+      }
+      throw e
+    }
     rawText = result.text
     usedBrowserRendering = result.usedBrowserRendering
 
