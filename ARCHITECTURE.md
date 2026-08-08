@@ -16,7 +16,7 @@ This document is the source of truth for the next two steps: frontend design, th
 | Area | Decision |
 |---|---|
 | Hosting/backend | **Cloudflare full-stack**: Pages (frontend + Functions API), D1, R2, Workers AI |
-| Auth | **Cloudflare Access** (zero-trust gate, Google identity provider, restricted to the account owner's email only). Access issues a signed JWT and Cloudflare validates it at the edge before any request reaches the app — no login UI or session code to write. Satisfies "JWT + OIDC, no basic auth" for free. |
+| Auth | **Cloudflare Access** (zero-trust gate, Google identity provider, restricted to a two-email allowlist: `boudhayan.dev@gmail.com`, `kamalkalichoudhury36@gmail.com`). Access issues a signed JWT and Cloudflare validates it at the edge before any request reaches the app — no login UI or session code to write. Satisfies "JWT + OIDC, no basic auth" for free. The Access policy also requires a minimum Bot Score, as defense-in-depth against automated traffic hitting the login page (free, computed by Cloudflare for every request regardless of plan) — not load-bearing on its own since Google sign-in + the email allowlist already block anything that isn't a real authenticated human, but cheap to add. |
 | LLM | **Cloudflare Workers AI** (e.g. `llama-3.3-70b-instruct`) as the ingestion-time LLM — same vendor as the rest of the stack (one less account/secret), 10,000 free neurons/day, no card required. Structured extraction/summarization (JD parsing, resume field extraction, nudge generation) doesn't need frontier-model creativity, so the open model should be sufficient. **Swap risk noted:** if nudge quality disappoints, swapping to Gemini Flash free tier later is a one-function change — but Gemini's free tier ToS allows using submitted content to improve Google's products, which matters here since resume/JD text carries real personal and professional details. Workers AI doesn't carry that caveat, which is the deciding reason to start there rather than convenience alone. |
 | Storage: object | **R2** (S3-compatible) — stores the original resume PDF per application, so the exact file sent can be viewed/downloaded later. |
 | Storage: structured data | **D1** (serverless SQLite), not KV/DynamoDB-style. The tracker needs to search/filter by company, status, and date — a relational store does that natively where pure key-value would make it painful. |
@@ -28,7 +28,7 @@ This document is the source of truth for the next two steps: frontend design, th
 | Deployment shape | **Cloudflare Pages + Pages Functions**, one project, instead of a separately-hosted Worker. Pages Functions run on the same Workers runtime and support the same bindings (D1, R2, Workers AI, Browser Rendering), so frontend and API ship as one deployable unit on one origin — no CORS to configure, and Cloudflare Access protects page routes and API routes uniformly since they share a hostname. |
 | Domain | No custom domain purchase needed. Every Cloudflare Pages project gets a free `*.pages.dev` subdomain automatically (e.g. `job-tracker.pages.dev`) — that's the whole app's URL, frontend and API together. Custom domain stays an option later, but nothing about this design requires it. |
 | Frontend | Deliberately **not decided here** — handled as its own step (frontend design with Claude Code). Constraints carried forward: static assets deployable via Cloudflare Pages, installable as a PWA (manifest + service worker) so it behaves like an app on Android, responsive enough to drive both flows from a phone or a laptop. |
-| Environments | **Two fully separate Cloudflare Pages projects**, `job-tracker-dev` and `job-tracker-prod`, each with its own `*.pages.dev` domain, each bound to its own D1 database and R2 bucket, each gated by its own Cloudflare Access application (both policies restricted to the same email). Same Cloudflare account throughout — only the resources are split. See "Environments & deployment" below. |
+| Environments | **Two fully separate Cloudflare Pages projects**, `job-tracker-dev` and `job-tracker-prod`, each with its own `*.pages.dev` domain, each bound to its own D1 database and R2 bucket, each gated by its own Cloudflare Access application (both policies restricted to the same two-email allowlist, both with the bot-score requirement). Same Cloudflare account throughout — only the resources are split. See "Environments & deployment" below. |
 
 ## System shape
 
@@ -36,7 +36,7 @@ This document is the source of truth for the next two steps: frontend design, th
 Laptop or Android — same webapp, same login, both flows available
                        │
                        ▼
-          Cloudflare Access (gate — Google login, owner email only)
+          Cloudflare Access (gate — Google login, 2-email allowlist + bot-score check)
                        ▼
           Cloudflare Pages project (PWA frontend + Pages Functions API, one origin)
              ├─ /              → static app shell (Track a job / Search my jobs)
@@ -61,7 +61,7 @@ Exact columns/normalization get finalized during implementation — this is enou
 
 Goal: same account, resource-level separation, and a script-driven promotion path — deploy to dev, verify by hand, then run the same thing against prod config.
 
-- **Resources, doubled:** `job-tracker-dev` / `job-tracker-prod` as two separate Pages projects; `job_tracker_dev` / `job_tracker_prod` as two D1 databases; `job-tracker-dev-resumes` / `job-tracker-prod-resumes` as two R2 buckets; two Cloudflare Access applications (one per `*.pages.dev` hostname), both policies scoped to the same email only.
+- **Resources, doubled:** `job-tracker-dev` / `job-tracker-prod` as two separate Pages projects; `job_tracker_dev` / `job_tracker_prod` as two D1 databases; `job-tracker-dev-resumes` / `job-tracker-prod-resumes` as two R2 buckets; two Cloudflare Access applications (one per `*.pages.dev` hostname), both policies scoped to the same two-email allowlist, both requiring a minimum bot score.
 - **Config, per environment:** a Wrangler config per environment (e.g. `wrangler.dev.toml` / `wrangler.prod.toml`) holding that environment's D1 database ID and R2 bucket name. Workers AI needs no secret at all — it's a native `env.AI` binding tied to the Cloudflare account, so there's nothing extra to rotate or leak per environment.
 - **Deploy scripts:** `npm run deploy:dev` and `npm run deploy:prod`, each just a `wrangler pages deploy` invocation pointed at the matching project name and config file. Promotion flow is manual and deliberate: run `deploy:dev`, test against the dev URL, then run `deploy:prod` once satisfied — no auto-promotion.
 - **Later, if wanted:** these same scripts drop straight into a GitHub Actions workflow (push to `develop` → `deploy:dev`, push to `main` → `deploy:prod`) using a Cloudflare API token as a GitHub secret. Not needed for a weekend v1 — noted so the path exists without building it now.

@@ -23,6 +23,42 @@ offline.
 
 ---
 
+## Secrets — why the `wrangler.*.toml` files are safe to commit
+
+None of the values currently in `wrangler.dev.toml` / `wrangler.prod.toml` are bearer credentials:
+
+- D1 `database_id` and R2 `bucket_name` are resource identifiers, not access keys — they don't
+  authenticate anything by themselves. Whoever has your Cloudflare account login can already see
+  them in the dashboard.
+- `ACCESS_TEAM_DOMAIN` is visible to anyone who visits the site anyway (it's the domain the browser
+  gets redirected to for login).
+- `ACCESS_AUD` identifies which Access application a JWT was issued for — it stops JWTs from one
+  app being replayed against another, but on its own it doesn't let anyone forge a session; that
+  still requires actually passing Google sign-in and being on the email allowlist.
+- Workers AI, R2, D1, and Browser Rendering are all **native bindings** — Cloudflare authenticates
+  them at the platform level (your account owns the Pages project, the Pages project owns the
+  binding), so none of this architecture needs an embedded API key at all.
+
+So there's nothing to hide in these files, and committing them is what makes `scripts/deploy.sh`
+work without a manual "go paste your secrets" step.
+
+**If a real secret ever shows up later** (an external LLM API key if you swap off Workers AI, a
+Cloudflare API token for CI, anything that actually authenticates as *you*) — it does **not** go in
+any `wrangler.*.toml` file, committed or not. Cloudflare Pages has a proper secret store for exactly
+this, set per-project and never written to disk in this repo:
+
+```bash
+npx wrangler pages secret put SOME_API_KEY --project-name job-tracker-dev
+npx wrangler pages secret put SOME_API_KEY --project-name job-tracker-prod
+```
+
+It prompts for the value interactively, stores it server-side against that Pages project, and it
+shows up in `env.SOME_API_KEY` at runtime — same shape as everything else in `functions/`, just
+never touching git. That's the mechanism to reach for instead of any interpolation-at-deploy-time
+script — Cloudflare already built the thing that script would be reinventing.
+
+---
+
 ## Local run, end to end
 
 One-time setup:
@@ -88,7 +124,15 @@ in local dev. Without it, every other route still works; those three return a 50
    - Domain: `job-tracker-dev.pages.dev` (or your actual dev domain once you know it — Pages
      assigns this on first deploy, so it's fine to deploy once first and come back to this step).
    - Identity provider: Google (add it under Settings → Authentication if not already configured).
-   - Policy: **Allow**, rule = *Emails* = your email address only.
+   - Policy: **Allow**, rule = *Emails* = `boudhayan.dev@gmail.com`, `kamalkalichoudhury36@gmail.com`
+     (add both as separate values in the same Emails rule — anyone not on this list never gets a
+     valid session, regardless of what they authenticate with).
+   - **Bot protection**: on the same policy, add a second condition (AND) — *Require* → *Bot Score* →
+     greater than `30` (Cloudflare computes this for every request at no extra cost; it blocks
+     scripted/automated traffic from ever reaching the login prompt, on top of the email allowlist
+     and the Google sign-in itself). This is defense-in-depth, not strictly load-bearing — Access +
+     Google OAuth already stops anything that can't complete a real Google login — but it's a couple
+     of clicks and cuts down noise from bots probing the login page.
    - Save, then copy the **Application Audience (AUD) Tag** from the application's Overview tab.
    - Fill both into `wrangler.dev.toml`:
      - `ACCESS_TEAM_DOMAIN` = `<your-team-name>.cloudflareaccess.com`
@@ -126,8 +170,8 @@ npm run db:migrate:prod
 
 Then repeat the Access application setup (step 6 above) for `job-tracker-prod.pages.dev`, filling
 `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD` into `wrangler.prod.toml` — **use a separate Access application
-from dev**, even though the policy (your email only) is identical, so the two environments stay
-fully independent.
+from dev**, even though the policy (same two emails, same bot-score rule) is identical, so the two
+environments stay fully independent.
 
 ```bash
 npm run deploy:prod
